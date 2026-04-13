@@ -36,7 +36,6 @@ export interface FAQPage {
 }
 
 export interface FAQContent {
-  title: string;
   question: string;
   answer: string;
   order?: number;
@@ -49,6 +48,8 @@ export interface LandingPageContent {
   logoUrl?: string;
   bannerUrl?: string;
   contentSection?: string;
+  mrecTiles?: MRECTile[];
+  faqs?: FAQContent[];
 }
 
 const getAssetUrl = (element: any): string | undefined => {
@@ -59,14 +60,148 @@ const getAssetUrl = (element: any): string | undefined => {
   const value = element.value;
   if (Array.isArray(value) && value.length > 0) {
     const asset = value[0];
-    return typeof asset === 'string' ? asset : asset?.url;
+    if (typeof asset === 'string') {
+      return asset;
+    }
+    if (asset?.url) {
+      return asset.url;
+    }
+    return asset?.download_url || asset?.file?.url;
   }
 
   if (typeof value === 'string') {
     return value;
   }
 
+  if (value && typeof value === 'object') {
+    return value.url || value.download_url || value.file?.url;
+  }
+
   return undefined;
+};
+
+const getLinkedMRECTiles = (element: any): MRECTile[] => {
+  if (!element) {
+    return [];
+  }
+
+  const linkedItems = Array.isArray(element.linkedItems) ? element.linkedItems : [];
+  if (linkedItems.length > 0) {
+    return linkedItems
+      .map((linked: any) => {
+        const imageElement = linked.elements?.image;
+        return {
+          title:
+            linked.elements?.title?.value ||
+            linked.elements?.headline?.value ||
+            linked.name ||
+            'MREC Tile',
+          imageUrl: getAssetUrl(imageElement),
+          order: linked.elements?.order?.value || 0,
+        } as MRECTile;
+      })
+      .filter((tile: MRECTile | null): tile is MRECTile => !!tile && !!tile.imageUrl);
+  }
+
+  const values = Array.isArray(element.value) ? element.value : [element.value];
+
+  const resolveItem = (entry: any): any => {
+    if (!entry) {
+      return null;
+    }
+
+    if (entry.elements) {
+      return entry;
+    }
+
+    if (entry.item) {
+      return resolveItem(entry.item);
+    }
+
+    if (entry.value && Array.isArray(entry.value) && entry.value.length > 0) {
+      return resolveItem(entry.value[0]);
+    }
+
+    return null;
+  };
+
+  return values
+    .map((entry: any) => {
+      const linked = resolveItem(entry);
+      if (!linked) {
+        return null;
+      }
+
+      const imageElement = linked.elements?.image;
+      return {
+        title:
+          linked.elements?.title?.value ||
+          linked.elements?.headline?.value ||
+          linked.name ||
+          'MREC Tile',
+        imageUrl: getAssetUrl(imageElement),
+        order: linked.elements?.order?.value || 0,
+      } as MRECTile;
+    })
+    .filter((tile: MRECTile | null): tile is MRECTile => !!tile && !!tile.imageUrl);
+};
+
+const getLinkedFAQs = (element: any): FAQContent[] => {
+  if (!element) {
+    return [];
+  }
+
+  const linkedItems = Array.isArray(element.linkedItems) ? element.linkedItems : [];
+  if (linkedItems.length > 0) {
+    return linkedItems
+      .map((linked: any) => ({
+        question: linked.elements?.question?.value || '',
+        answer: linked.elements?.answer?.value || '',
+        order: linked.elements?.order?.value || 0,
+        pageSlug:
+          linked.elements?.page_slug?.value?.toString() || linked.elements?.url_slug?.value?.toString() || linked.system?.codename || '',
+      }))
+      .filter((faq: FAQContent) => faq.question && faq.answer);
+  }
+
+  const values = Array.isArray(element.value) ? element.value : [element.value];
+
+  const resolveItem = (entry: any): any => {
+    if (!entry) {
+      return null;
+    }
+
+    if (entry.elements) {
+      return entry;
+    }
+
+    if (entry.item) {
+      return resolveItem(entry.item);
+    }
+
+    if (entry.value && Array.isArray(entry.value) && entry.value.length > 0) {
+      return resolveItem(entry.value[0]);
+    }
+
+    return null;
+  };
+
+  return values
+    .map((entry: any) => {
+      const linked = resolveItem(entry);
+      if (!linked) {
+        return null;
+      }
+
+      return {
+        question: linked.elements?.question?.value || '',
+        answer: linked.elements?.answer?.value || '',
+        order: linked.elements?.order?.value || 0,
+        pageSlug:
+          linked.elements?.page_slug?.value?.toString() || linked.elements?.url_slug?.value?.toString() || linked.system?.codename || '',
+      } as FAQContent;
+    })
+    .filter((faq: FAQContent | null): faq is FAQContent => !!faq && !!faq.question && !!faq.answer);
 };
 
 // Function to fetch home page content from Kontent.ai
@@ -132,6 +267,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       .items()
       .type('landing_page')
       .equalsFilter('elements.url_slug', normalizedSlug)
+      .depthParameter(3)
       .toPromise();
 
     if (response.data.items.length > 0) {
@@ -142,6 +278,8 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
         logoUrl: getAssetUrl(item.elements.brand_logo),
         bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: item.elements.content_section?.value || '',
+        mrecTiles: getLinkedMRECTiles(item.elements.mrec_tiles),
+        faqs: getLinkedFAQs(item.elements.faq_s),
       };
     }
 
@@ -150,6 +288,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       .items()
       .type('landing_page')
       .limitParameter(100)
+      .depthParameter(3)
       .toPromise();
 
     const found = fallbackResponse.data.items.find((item: any) => {
@@ -167,6 +306,8 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       logoUrl: getAssetUrl(found.elements.brand_logo),
       bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: found.elements.content_section?.value || '',
+      mrecTiles: getLinkedMRECTiles(found.elements.mrec_tiles),
+      faqs: getLinkedFAQs(found.elements.faq_s),
     };
   } catch (error) {
     console.error(`Error fetching landing page content for slug ${slug}:`, error);
@@ -262,14 +403,12 @@ export async function getFAQsBySlug(slug: string): Promise<FAQContent[]> {
       .toPromise();
 
     const faqs = response.data.items.map((item: any) => {
-      const rawUrlSlug = item.elements.url_slug?.value?.toString() || '';
-      const rawPageSlug = item.elements.page_slug?.value?.toString() || '';
-      const itemSlug = (rawUrlSlug || rawPageSlug || item.system?.codename || '')
+      const rawPageSlug = item.elements.page_slug?.value?.toString() || item.elements.url_slug?.value?.toString() || '';
+      const itemSlug = (rawPageSlug || item.system?.codename || '')
         .replace(/^\/+/, '')
         .toLowerCase();
 
       return {
-        title: item.elements.title?.value || '',
         question: item.elements.question?.value || '',
         answer: item.elements.answer?.value || '',
         order: item.elements.order?.value || 0,
@@ -280,7 +419,7 @@ export async function getFAQsBySlug(slug: string): Promise<FAQContent[]> {
     const sortedFaqs = faqs.sort((a, b) => (a.order || 0) - (b.order || 0));
     const matchingFaqs = sortedFaqs.filter((faq) => faq.pageSlug === normalizedSlug);
 
-    return matchingFaqs.length > 0 ? matchingFaqs : sortedFaqs;
+    return matchingFaqs;
   } catch (error) {
     console.error('Error fetching FAQs from faq content type:', error);
     return [];

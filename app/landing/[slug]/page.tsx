@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getLandingPageBySlug, getMRECTiles, getFAQsBySlug } from '../../../lib/kontent';
+import { getLandingPageBySlug } from '../../../lib/kontent';
 import LandingPageLogo from '../../../components/LandingPageLogo';
 
 interface LandingPageProps {
@@ -11,8 +11,8 @@ interface LandingPageProps {
 export default async function LandingPage({ params }: LandingPageProps) {
   const { slug } = await params;
   const page = await getLandingPageBySlug(slug);
-  const mrecTiles = await getMRECTiles();
-  const faqs = await getFAQsBySlug(slug);
+  const mrecTiles = page?.mrecTiles ?? [];
+  const faqs = page?.faqs ?? [];
 
   if (!page) {
     return notFound();
