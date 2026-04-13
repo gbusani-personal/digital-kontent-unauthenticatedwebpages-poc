@@ -49,16 +49,34 @@ This project is configured to fetch content from Kontent.ai CMS. The integration
 
 ### Setting up Content Types
 
-1. In your Kontent.ai project, create a content type called `home_page` with these elements:
-   - `title` (Text)
-   - `subtitle` (Text)
-   - `description` (Rich text)
-   - `cta_text` (Text)
-   - `features` (Modular content) - for insurance features
+1. In your Kontent.ai project, create the following content types:
+   - `home_page` with elements:
+     - `title` (Text)
+     - `subtitle` (Text)
+     - `description` (Rich text)
+     - `cta_text` (Text)
+     - `features` (Modular content) - for insurance features
+   - `landing_page` with elements:
+     - `title` (Text)
+     - `url_slug` (Text) - used for the page URL
 
 2. Create content items based on your content types.
 
 3. The application will automatically fetch and display this content.
+
+### Landing Pages
+
+Landing pages are available under:
+
+```
+/landing/[url_slug]
+```
+
+For example, a landing page with `url_slug` value `special-offer` will be available at:
+
+```bash
+http://localhost:3000/landing/special-offer
+```
 
 ### API Routes
 

@@ -21,6 +21,11 @@ export interface FAQItem {
   order?: number;
 }
 
+export interface LandingPageContent {
+  title: string;
+  urlSlug: string;
+}
+
 // Function to fetch home page content from Kontent.ai
 export async function getHomePageContent(): Promise<HomePageContent | null> {
   try {
@@ -72,6 +77,51 @@ export async function getFAQContent(): Promise<FAQItem[]> {
   } catch (error) {
     console.error('Error fetching FAQ content from Kontent.ai:', error);
     return [];
+  }
+}
+
+export async function getLandingPageBySlug(slug: string): Promise<LandingPageContent | null> {
+  const normalizedSlug = slug.replace(/^\/+/, '');
+  const client = getKontentClient();
+
+  try {
+    const response = await client
+      .items()
+      .type('landing_page')
+      .equalsFilter('elements.url_slug', normalizedSlug)
+      .toPromise();
+
+    if (response.data.items.length > 0) {
+      const item = response.data.items[0];
+      return {
+        title: item.elements.title?.value || 'Landing Page',
+        urlSlug: item.elements.url_slug?.value || normalizedSlug,
+      };
+    }
+
+    // Fallback: load all landing pages and search by slug manually.
+    const fallbackResponse = await client
+      .items()
+      .type('landing_page')
+      .limitParameter(100)
+      .toPromise();
+
+    const found = fallbackResponse.data.items.find((item: any) => {
+      const pageSlug = item.elements.url_slug?.value?.toString().replace(/^\/+/, '') || '';
+      return pageSlug === normalizedSlug || pageSlug === `/${normalizedSlug}` || item.system?.codename === normalizedSlug;
+    });
+
+    if (!found) {
+      return null;
+    }
+
+    return {
+      title: found.elements.title?.value || 'Landing Page',
+      urlSlug: found.elements.url_slug?.value || normalizedSlug,
+    };
+  } catch (error) {
+    console.error(`Error fetching landing page content for slug ${slug}:`, error);
+    return null;
   }
 }
 
