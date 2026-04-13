@@ -40,6 +40,7 @@ export interface FAQContent {
   question: string;
   answer: string;
   order?: number;
+  pageSlug?: string;
 }
 
 export interface LandingPageContent {
@@ -249,25 +250,37 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
   }
 }
 
-// Function to fetch FAQs from faq content type
-export async function getFAQsByType(): Promise<FAQContent[]> {
-  try {
-    const client = getKontentClient();
+// Function to fetch FAQs from faq content type by page slug
+export async function getFAQsBySlug(slug: string): Promise<FAQContent[]> {
+  const normalizedSlug = slug.replace(/^\/+/, '').toLowerCase();
+  const client = getKontentClient();
 
+  try {
     const response = await client
       .items()
       .type('faq')
       .toPromise();
 
-    // Sort by order field if available
-    const faqs = response.data.items.map((item: any) => ({
-      title: item.elements.title?.value || '',
-      question: item.elements.question?.value || '',
-      answer: item.elements.answer?.value || '',
-      order: item.elements.order?.value || 0,
-    }));
+    const faqs = response.data.items.map((item: any) => {
+      const rawUrlSlug = item.elements.url_slug?.value?.toString() || '';
+      const rawPageSlug = item.elements.page_slug?.value?.toString() || '';
+      const itemSlug = (rawUrlSlug || rawPageSlug || item.system?.codename || '')
+        .replace(/^\/+/, '')
+        .toLowerCase();
 
-    return faqs.sort((a, b) => a.order - b.order);
+      return {
+        title: item.elements.title?.value || '',
+        question: item.elements.question?.value || '',
+        answer: item.elements.answer?.value || '',
+        order: item.elements.order?.value || 0,
+        pageSlug: itemSlug,
+      };
+    });
+
+    const sortedFaqs = faqs.sort((a, b) => (a.order || 0) - (b.order || 0));
+    const matchingFaqs = sortedFaqs.filter((faq) => faq.pageSlug === normalizedSlug);
+
+    return matchingFaqs.length > 0 ? matchingFaqs : sortedFaqs;
   } catch (error) {
     console.error('Error fetching FAQs from faq content type:', error);
     return [];

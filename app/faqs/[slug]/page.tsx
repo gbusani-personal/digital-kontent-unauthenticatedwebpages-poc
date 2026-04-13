@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getFAQPageBySlug, getMRECTiles, getFAQsByType } from '../../../lib/kontent';
+import { getFAQPageBySlug, getMRECTiles, getFAQsBySlug } from '../../../lib/kontent';
 import LandingPageLogo from '../../../components/LandingPageLogo';
 
 interface FAQPageProps {
@@ -12,7 +12,7 @@ export default async function FAQPage({ params }: FAQPageProps) {
   const { slug } = await params;
   const page = await getFAQPageBySlug(slug);
   const mrecTiles = await getMRECTiles();
-  const faqs = await getFAQsByType();
+  const faqs = await getFAQsBySlug(slug);
 
   if (!page) {
     return notFound();
