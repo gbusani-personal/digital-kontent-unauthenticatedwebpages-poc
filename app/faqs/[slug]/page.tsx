@@ -1,16 +1,16 @@
 import { notFound } from 'next/navigation';
-import { getLandingPageBySlug, getMRECTiles, getFAQsByType } from '../../../lib/kontent';
+import { getFAQPageBySlug, getMRECTiles, getFAQsByType } from '../../../lib/kontent';
 import LandingPageLogo from '../../../components/LandingPageLogo';
 
-interface LandingPageProps {
+interface FAQPageProps {
   params: Promise<{
     slug: string;
   }>;
 }
 
-export default async function LandingPage({ params }: LandingPageProps) {
+export default async function FAQPage({ params }: FAQPageProps) {
   const { slug } = await params;
-  const page = await getLandingPageBySlug(slug);
+  const page = await getFAQPageBySlug(slug);
   const mrecTiles = await getMRECTiles();
   const faqs = await getFAQsByType();
 
@@ -69,7 +69,6 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   </div>
                 </div>
               )}
-
             </div>
           </div>
 
