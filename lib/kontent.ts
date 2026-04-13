@@ -24,7 +24,27 @@ export interface FAQItem {
 export interface LandingPageContent {
   title: string;
   urlSlug: string;
+  logoUrl?: string;
+  contentSection?: string;
 }
+
+const getAssetUrl = (element: any): string | undefined => {
+  if (!element?.value) {
+    return undefined;
+  }
+
+  const value = element.value;
+  if (Array.isArray(value) && value.length > 0) {
+    const asset = value[0];
+    return typeof asset === 'string' ? asset : asset?.url;
+  }
+
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  return undefined;
+};
 
 // Function to fetch home page content from Kontent.ai
 export async function getHomePageContent(): Promise<HomePageContent | null> {
@@ -96,6 +116,8 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       return {
         title: item.elements.title?.value || 'Landing Page',
         urlSlug: item.elements.url_slug?.value || normalizedSlug,
+        logoUrl: getAssetUrl(item.elements.brand_logo),
+        contentSection: item.elements.content_section?.value || '',
       };
     }
 
@@ -118,6 +140,8 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
     return {
       title: found.elements.title?.value || 'Landing Page',
       urlSlug: found.elements.url_slug?.value || normalizedSlug,
+      logoUrl: getAssetUrl(found.elements.brand_logo),
+      contentSection: found.elements.content_section?.value || '',
     };
   } catch (error) {
     console.error(`Error fetching landing page content for slug ${slug}:`, error);

@@ -120,7 +120,7 @@ export default async function Home() {
                       </svg>
                     </summary>
                     <div className="px-6 pb-6">
-                      <div className="text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: faq.answer }} />
+                      <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: faq.answer }} />
                     </div>
                   </details>
                 </div>

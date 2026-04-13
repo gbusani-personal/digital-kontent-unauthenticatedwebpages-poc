@@ -59,6 +59,8 @@ This project is configured to fetch content from Kontent.ai CMS. The integration
    - `landing_page` with elements:
      - `title` (Text)
      - `url_slug` (Text) - used for the page URL
+     - `brand_logo` (Asset) - logo image for the landing page
+     - `content_section` (Rich text) - main content for the landing page
 
 2. Create content items based on your content types.
 
