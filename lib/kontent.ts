@@ -25,6 +25,7 @@ export interface LandingPageContent {
   title: string;
   urlSlug: string;
   logoUrl?: string;
+  bannerUrl?: string;
   contentSection?: string;
 }
 
@@ -117,6 +118,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
         title: item.elements.title?.value || 'Landing Page',
         urlSlug: item.elements.url_slug?.value || normalizedSlug,
         logoUrl: getAssetUrl(item.elements.brand_logo),
+        bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: item.elements.content_section?.value || '',
       };
     }
@@ -141,6 +143,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       title: found.elements.title?.value || 'Landing Page',
       urlSlug: found.elements.url_slug?.value || normalizedSlug,
       logoUrl: getAssetUrl(found.elements.brand_logo),
+      bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: found.elements.content_section?.value || '',
     };
   } catch (error) {

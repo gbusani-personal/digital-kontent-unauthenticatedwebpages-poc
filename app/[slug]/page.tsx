@@ -21,10 +21,17 @@ export default async function LandingPage({ params }: LandingPageProps) {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-3xl bg-white shadow-xl border border-slate-200 p-10">
           <LandingPageLogo logoUrl={page.logoUrl} title={page.title} />
+          {page.bannerUrl && (
+            <div className="mb-8 text-center">
+              <img
+                src={page.bannerUrl}
+                alt={`${page.title} banner`}
+                className="w-full max-w-4xl mx-auto rounded-lg shadow-md"
+              />
+            </div>
+          )}
           <div className="mb-8 text-center">
-            <p className="text-sm uppercase tracking-[0.3em] text-blue-600 mb-3">Landing Page</p>
             <h1 className="text-4xl sm:text-5xl font-bold text-slate-900">{page.title}</h1>
-            <p className="mt-4 text-lg text-slate-600">This landing page is powered from Kontent.ai and resolved by your URL slug.</p>
           </div>
 
           {page.contentSection && (
@@ -33,13 +40,6 @@ export default async function LandingPage({ params }: LandingPageProps) {
             </div>
           )}
 
-          <div className="space-y-6 text-slate-700">
-            <p className="text-base leading-8">Use this page to show special offers, customer stories, or campaign content from your landing page content type.</p>
-            <div className="rounded-2xl bg-slate-50 p-6 border border-slate-200">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Page slug</p>
-              <p className="mt-2 text-lg text-slate-900">{page.urlSlug}</p>
-            </div>
-          </div>
         </div>
       </main>
     </div>
