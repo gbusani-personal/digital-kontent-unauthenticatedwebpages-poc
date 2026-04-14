@@ -11,16 +11,11 @@ export const kontentConfig = {
 export const getKontentClient = () => {
   const config: Record<string, any> = {
     environmentId: kontentConfig.environmentId,
+    previewApiKey: kontentConfig.previewApiKey,
+    defaultQueryConfig: {
+      usePreviewMode: true,
+    },
   };
-
-  // Use preview API key for preview mode
-  if (kontentConfig.previewApiKey) {
-    config.previewApiKey = kontentConfig.previewApiKey;
-    config.usePreviewMode = true;
-  } else if (kontentConfig.deliveryApiKey) {
-    // Fallback to delivery API key if preview is not available
-    config.apiKey = kontentConfig.deliveryApiKey;
-  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return createDeliveryClient(config as any);
