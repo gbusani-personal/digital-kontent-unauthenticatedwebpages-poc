@@ -48,6 +48,7 @@ export interface LandingPageContent {
   logoUrl?: string;
   bannerUrl?: string;
   contentSection?: string;
+  formsSection?: string;
   mrecTiles?: MRECTile[];
   faqs?: FAQContent[];
 }
@@ -272,12 +273,14 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
 
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
+      const formsValue = item.elements.forms_section?.value || '';
       return {
         title: item.elements.title?.value || 'Landing Page',
         urlSlug: item.elements.url_slug?.value || normalizedSlug,
         logoUrl: getAssetUrl(item.elements.brand_logo),
         bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: item.elements.content_section?.value || '',
+        formsSection: formsValue,
         mrecTiles: getLinkedMRECTiles(item.elements.mrec_tiles),
         faqs: getLinkedFAQs(item.elements.faq_s),
       };
@@ -306,6 +309,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       logoUrl: getAssetUrl(found.elements.brand_logo),
       bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: found.elements.content_section?.value || '',
+      formsSection: found.elements.forms_section?.value || found.elements.form_section?.value || '',
       mrecTiles: getLinkedMRECTiles(found.elements.mrec_tiles),
       faqs: getLinkedFAQs(found.elements.faq_s),
     };
