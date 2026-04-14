@@ -9,17 +9,17 @@ export const kontentConfig = {
 
 // Kontent.ai client configuration
 export const getKontentClient = () => {
-  const config: Record<string, string> = {
+  const config: Record<string, any> = {
     environmentId: kontentConfig.environmentId,
   };
 
-  // Only add API keys if they are provided
-  if (kontentConfig.deliveryApiKey) {
-    config.apiKey = kontentConfig.deliveryApiKey;
-  }
-
+  // Use preview API key for preview mode
   if (kontentConfig.previewApiKey) {
     config.previewApiKey = kontentConfig.previewApiKey;
+    config.usePreviewMode = true;
+  } else if (kontentConfig.deliveryApiKey) {
+    // Fallback to delivery API key if preview is not available
+    config.apiKey = kontentConfig.deliveryApiKey;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
