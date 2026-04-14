@@ -46,7 +46,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
               )}
 
               {page.formsSection && (
-                <div className="mb-8 rich-text-content border-t border-slate-200 pt-8">
+                <div className="mt-12 mb-8 rich-text-content border-t border-slate-200 pt-8 text-center">
                   <div dangerouslySetInnerHTML={{ __html: page.formsSection }} />
                 </div>
               )}
