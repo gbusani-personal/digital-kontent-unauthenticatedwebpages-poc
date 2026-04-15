@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getFAQPageBySlug, getMRECTiles, getFAQsBySlug } from '../../../lib/kontent';
+import KontentEditable from '../../../components/KontentEditable';
 import LandingPageLogo from '../../../components/LandingPageLogo';
 
 interface FAQPageProps {
@@ -13,6 +14,7 @@ export default async function FAQPage({ params }: FAQPageProps) {
   const page = await getFAQPageBySlug(slug);
   const mrecTiles = await getMRECTiles();
   const faqs = await getFAQsBySlug(slug);
+  const pageItemId = page?.itemId;
 
   if (!page) {
     return notFound();
@@ -25,7 +27,11 @@ export default async function FAQPage({ params }: FAQPageProps) {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <div className="rounded-3xl bg-white shadow-xl border border-slate-200 p-10">
-              <LandingPageLogo logoUrl={page.logoUrl} title={page.title} />
+              <LandingPageLogo
+                logoUrl={page.logoUrl}
+                title={page.title}
+                logoItemId={page.logoItemId}
+              />
               {page.bannerUrl && (
                 <div className="mb-8 text-center">
                   <img
@@ -36,13 +42,24 @@ export default async function FAQPage({ params }: FAQPageProps) {
                 </div>
               )}
               <div className="mb-8 text-center">
-                <h1 className="text-4xl sm:text-5xl font-bold text-slate-900">{page.title}</h1>
+                <KontentEditable
+                  itemId={pageItemId}
+                  elementCodename="title"
+                  tag="h1"
+                  className="text-4xl sm:text-5xl font-bold text-slate-900"
+                >
+                  {page.title}
+                </KontentEditable>
               </div>
 
               {page.contentSection && (
-                <div className="mb-8 rich-text-content">
-                  <div dangerouslySetInnerHTML={{ __html: page.contentSection }} />
-                </div>
+                <KontentEditable
+                  itemId={pageItemId}
+                  elementCodename="content_section"
+                  tag="div"
+                  className="mb-8 rich-text-content"
+                  html={page.contentSection}
+                />
               )}
 
               {/* FAQs Section */}
@@ -56,14 +73,26 @@ export default async function FAQPage({ params }: FAQPageProps) {
                         className="rounded-lg border border-slate-200 bg-slate-50 p-4 group hover:border-blue-300 transition-colors"
                       >
                         <summary className="flex cursor-pointer items-center justify-between font-semibold text-slate-900 hover:text-blue-600 transition-colors">
-                          {faq.question}
-                          <span className="ml-4 inline-block transform transition-transform group-open:rotate-180">
-                            ▼
-                          </span>
-                        </summary>
-                        <div className="mt-4 rich-text-content text-slate-700 leading-relaxed">
-                          <div dangerouslySetInnerHTML={{ __html: faq.answer }} />
-                        </div>
+                      <KontentEditable
+                        itemId={faq.itemId}
+                        elementCodename="question"
+                        tag="span"
+                        className="text-slate-900"
+                      >
+                        {faq.question}
+                      </KontentEditable>
+                      <span className="ml-4 inline-block transform transition-transform group-open:rotate-180">
+                        ▼
+                      </span>
+                    </summary>
+                    <div className="mt-4 rich-text-content text-slate-700 leading-relaxed">
+                      <KontentEditable
+                        itemId={faq.itemId}
+                        elementCodename="answer"
+                        tag="div"
+                        html={faq.answer}
+                      />
+                    </div>
                       </details>
                     ))}
                   </div>
@@ -77,12 +106,12 @@ export default async function FAQPage({ params }: FAQPageProps) {
             <div className="lg:col-span-1">
               <div className="space-y-4">
                 {mrecTiles.map((tile, index) => (
-                  <div key={index} className="rounded-lg bg-white shadow-md border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow">
+                  <div key={index} className="rounded-lg bg-white shadow-md border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow aspect-square">
                     {tile.imageUrl && (
                       <img
                         src={tile.imageUrl}
                         alt={tile.title}
-                        className="w-full h-40 object-cover"
+                        className="w-full h-full object-contain object-center"
                       />
                     )}
                   </div>

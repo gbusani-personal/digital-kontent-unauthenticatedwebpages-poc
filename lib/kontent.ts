@@ -2,6 +2,8 @@ import { getKontentClient } from '../config/kontent';
 
 // Types for Kontent.ai content
 export interface HomePageContent {
+  itemId?: string;
+  itemCodename?: string;
   title: string;
   subtitle: string;
   description: string;
@@ -16,6 +18,8 @@ export interface Feature {
 }
 
 export interface FAQItem {
+  itemId?: string;
+  itemCodename?: string;
   question: string;
   answer: string;
   order?: number;
@@ -28,14 +32,19 @@ export interface MRECTile {
 }
 
 export interface FAQPage {
+  itemId?: string;
+  itemCodename?: string;
   title: string;
   urlSlug: string;
   logoUrl?: string;
+  logoItemId?: string;
   bannerUrl?: string;
   contentSection?: string;
 }
 
 export interface FAQContent {
+  itemId?: string;
+  itemCodename?: string;
   question: string;
   answer: string;
   order?: number;
@@ -43,9 +52,12 @@ export interface FAQContent {
 }
 
 export interface LandingPageContent {
+  itemId?: string;
+  itemCodename?: string;
   title: string;
   urlSlug: string;
   logoUrl?: string;
+  logoItemId?: string;
   bannerUrl?: string;
   contentSection?: string;
   formsSection?: string;
@@ -225,6 +237,8 @@ export async function getHomePageContent(): Promise<HomePageContent | null> {
     // Map Kontent.ai fields to our interface
     // Adjust these field names based on your Kontent.ai content model
     return {
+      itemId: item.system?.id,
+      itemCodename: item.system?.codename,
       title: item.elements.title?.value || 'SecureLife Insurance',
       subtitle: item.elements.subtitle?.value || 'Protecting Your Future',
       description: item.elements.description?.value || 'Comprehensive insurance solutions...',
@@ -249,6 +263,8 @@ export async function getFAQContent(): Promise<FAQItem[]> {
 
     // Map Kontent.ai FAQ items to our interface
     return response.data.items.map((item: any) => ({
+      itemId: item.system?.id,
+      itemCodename: item.system?.codename,
       question: item.elements.question?.value || '',
       answer: item.elements.answer?.value || '',
       order: item.elements.order?.value || 0,
@@ -260,7 +276,7 @@ export async function getFAQContent(): Promise<FAQItem[]> {
 }
 
 // Function to fetch a brand partner logo from Kontent.ai
-async function getBrandPartnerLogo(contentType = 'brand_partner_root', fieldName = 'brand_partner_logo', slug?: string): Promise<string | undefined> {
+async function getBrandPartnerLogo(contentType = 'brand_partner_root', fieldName = 'brand_partner_logo', slug?: string): Promise<{ url?: string; itemId?: string } | undefined> {
   try {
     const client = getKontentClient();
 
@@ -286,7 +302,10 @@ async function getBrandPartnerLogo(contentType = 'brand_partner_root', fieldName
 
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
-      return getAssetUrl(item.elements[fieldName]);
+      return {
+        url: getAssetUrl(item.elements[fieldName]),
+        itemId: item.system?.id,
+      };
     }
 
     return undefined;
@@ -313,9 +332,12 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       const formsValue = item.elements.forms_section?.value || '';
       const brandLogo = await getBrandPartnerLogo();
       return {
+        itemId: item.system?.id,
+        itemCodename: item.system?.codename,
         title: item.elements.title?.value || 'Landing Page',
         urlSlug: item.elements.url_slug?.value || normalizedSlug,
-        logoUrl: brandLogo,
+        logoUrl: brandLogo?.url,
+        logoItemId: brandLogo?.itemId,
         bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: item.elements.content_section?.value || '',
         formsSection: formsValue,
@@ -343,9 +365,12 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
 
     const brandLogo = await getBrandPartnerLogo();
     return {
+      itemId: found.system?.id,
+      itemCodename: found.system?.codename,
       title: found.elements.title?.value || 'Landing Page',
       urlSlug: found.elements.url_slug?.value || normalizedSlug,
-      logoUrl: brandLogo,
+      logoUrl: brandLogo?.url,
+      logoItemId: brandLogo?.itemId,
       bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: found.elements.content_section?.value || '',
       formsSection: found.elements.forms_section?.value || found.elements.form_section?.value || '',
@@ -398,9 +423,12 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
       const item = response.data.items[0];
       const brandLogo = await getBrandPartnerLogo();
       return {
+        itemId: item.system?.id,
+        itemCodename: item.system?.codename,
         title: item.elements.title?.value || 'FAQ Page',
         urlSlug: item.elements.url_slug?.value || normalizedSlug,
-        logoUrl: brandLogo,
+        logoUrl: brandLogo?.url,
+        logoItemId: brandLogo?.itemId,
         bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: item.elements.content_section?.value || '',
       };
@@ -424,9 +452,12 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
 
     const brandLogo = await getBrandPartnerLogo();
     return {
+      itemId: found.system?.id,
+      itemCodename: found.system?.codename,
       title: found.elements.title?.value || 'FAQ Page',
       urlSlug: found.elements.url_slug?.value || normalizedSlug,
-      logoUrl: brandLogo,
+      logoUrl: brandLogo?.url,
+      logoItemId: brandLogo?.itemId,
       bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: found.elements.content_section?.value || '',
     };
@@ -454,6 +485,8 @@ export async function getFAQsBySlug(slug: string): Promise<FAQContent[]> {
         .toLowerCase();
 
       return {
+        itemId: item.system?.id,
+        itemCodename: item.system?.codename,
         question: item.elements.question?.value || '',
         answer: item.elements.answer?.value || '',
         order: item.elements.order?.value || 0,

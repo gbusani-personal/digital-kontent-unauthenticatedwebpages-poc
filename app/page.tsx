@@ -1,4 +1,5 @@
 import { getHomePageContent, getFAQContent, FAQItem } from '../lib/kontent';
+import KontentEditable from '../components/KontentEditable';
 
 export default async function Home() {
   // Fetch content from Kontent.ai
@@ -9,6 +10,7 @@ export default async function Home() {
 
   // Default content if Kontent.ai is not configured or fails
   const defaultContent = {
+    itemId: undefined,
     title: "SecureLife Insurance",
     subtitle: "Protecting Your Future, One Policy at a Time",
     description: "Comprehensive insurance coverage tailored to your needs. From auto and home insurance to life and health policies, we provide reliable protection for you and your loved ones.",
@@ -16,6 +18,7 @@ export default async function Home() {
   };
 
   const content = kontentContent || defaultContent;
+  const pageItemId = content.itemId;
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
@@ -38,17 +41,40 @@ export default async function Home() {
       {/* Hero Section */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            {content.title}<br />
-            <span className="text-blue-600">{content.subtitle}</span>
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          <KontentEditable
+            itemId={pageItemId}
+            elementCodename="title"
+            tag="h1"
+            className="text-4xl md:text-6xl font-bold text-gray-900 mb-6"
+          >
+            {content.title}
+            <br />
+            <KontentEditable
+              itemId={pageItemId}
+              elementCodename="subtitle"
+              tag="span"
+              className="text-blue-600"
+            >
+              {content.subtitle}
+            </KontentEditable>
+          </KontentEditable>
+          <KontentEditable
+            itemId={pageItemId}
+            elementCodename="description"
+            tag="p"
+            className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto"
+          >
             {content.description}
-          </p>
+          </KontentEditable>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors">
+            <KontentEditable
+              itemId={pageItemId}
+              elementCodename="cta_text"
+              tag="button"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors"
+            >
               {content.ctaText}
-            </button>
+            </KontentEditable>
             <button className="bg-white hover:bg-gray-50 text-blue-600 font-semibold py-3 px-8 rounded-lg border-2 border-blue-600 transition-colors">
               Learn More
             </button>
@@ -109,7 +135,14 @@ export default async function Home() {
                 <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200">
                   <details className="group">
                     <summary className="flex justify-between items-center p-6 cursor-pointer hover:bg-gray-50 transition-colors">
-                      <h3 className="text-lg font-semibold text-gray-900 pr-4">{faq.question}</h3>
+                      <KontentEditable
+                        itemId={faq.itemId}
+                        elementCodename="question"
+                        tag="h3"
+                        className="text-lg font-semibold text-gray-900 pr-4"
+                      >
+                        {faq.question}
+                      </KontentEditable>
                       <svg
                         className="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform flex-shrink-0"
                         fill="none"
@@ -120,7 +153,13 @@ export default async function Home() {
                       </svg>
                     </summary>
                     <div className="px-6 pb-6">
-                      <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: faq.answer }} />
+                      <KontentEditable
+                        itemId={faq.itemId}
+                        elementCodename="answer"
+                        tag="div"
+                        className="rich-text-content"
+                        html={faq.answer}
+                      />
                     </div>
                   </details>
                 </div>
