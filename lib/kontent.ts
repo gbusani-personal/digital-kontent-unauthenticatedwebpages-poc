@@ -280,15 +280,20 @@ export async function getFAQContent(): Promise<FAQItem[]> {
 }
 
 // Function to fetch Brand Partner Root data from Kontent.ai
-async function getBrandPartnerLogo(): Promise<{ url?: string; itemId?: string } | undefined> {
+async function getBrandPartnerLogo(collection?: string): Promise<{ url?: string; itemId?: string } | undefined> {
   try {
     const client = getKontentClient();
 
-    const response = await client
+    const query = client
       .items()
       .type('brand_partner_root')
-      .limitParameter(1)
-      .toPromise();
+      .limitParameter(1);
+
+    if (collection) {
+      query.collection(collection);
+    }
+
+    const response = await query.toPromise();
 
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
@@ -306,15 +311,20 @@ async function getBrandPartnerLogo(): Promise<{ url?: string; itemId?: string } 
   }
 }
 
-async function getBrandDisclaimer(): Promise<{ text?: string; itemId?: string } | undefined> {
+async function getBrandDisclaimer(collection?: string): Promise<{ text?: string; itemId?: string } | undefined> {
   try {
     const client = getKontentClient();
 
-    const response = await client
+    const query = client
       .items()
       .type('brand_partner_root')
-      .limitParameter(1)
-      .toPromise();
+      .limitParameter(1);
+
+    if (collection) {
+      query.collection(collection);
+    }
+
+    const response = await query.toPromise();
 
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
@@ -347,8 +357,9 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
       const formsValue = item.elements.forms_section?.value || '';
-      const brandLogo = await getBrandPartnerLogo();
-      const brandDisclaimer = await getBrandDisclaimer();
+      const collection = item.system?.collection;
+      const brandLogo = await getBrandPartnerLogo(collection);
+      const brandDisclaimer = await getBrandDisclaimer(collection);
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,
@@ -383,8 +394,9 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       return null;
     }
 
-    const brandLogo = await getBrandPartnerLogo();
-    const brandDisclaimer = await getBrandDisclaimer();
+    const collection = found.system?.collection;
+    const brandLogo = await getBrandPartnerLogo(collection);
+    const brandDisclaimer = await getBrandDisclaimer(collection);
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,
@@ -445,7 +457,8 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
 
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
-      const brandLogo = await getBrandPartnerLogo();
+      const collection = item.system?.collection;
+      const brandLogo = await getBrandPartnerLogo(collection);
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,
@@ -474,7 +487,8 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
       return null;
     }
 
-    const brandLogo = await getBrandPartnerLogo();
+    const collection = found.system?.collection;
+    const brandLogo = await getBrandPartnerLogo(collection);
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,
