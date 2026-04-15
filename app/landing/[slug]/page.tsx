@@ -26,22 +26,22 @@ export default async function LandingPage({ params }: LandingPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <div className="rounded-3xl bg-white shadow-xl border border-slate-200 p-10" data-kontent-item-id={pageItemId}>
+            <div className="flex flex-col space-y-8 p-10 rounded-3xl bg-white shadow-xl border border-slate-200" data-kontent-item-id={pageItemId}>
               <LandingPageLogo
                 logoUrl={page.logoUrl}
                 title={page.title}
                 logoItemId={page.logoItemId}
               />
               {page.bannerUrl && (
-                <div className="mb-8 text-center">
+                <div className="text-center">
                   <img
                     src={page.bannerUrl}
                     alt={`${page.title} banner`}
-                    className="w-full max-w-4xl mx-auto rounded-lg shadow-md"
+                    className="w-full max-w-4xl mx-auto rounded-lg shadow-md max-h-48 object-cover"
                   />
                 </div>
               )}
-              <div className="mb-8 text-center">
+              <div className="text-center">
                 <KontentEditable
                   itemId={pageItemId}
                   elementCodename="title"
@@ -57,7 +57,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   itemId={pageItemId}
                   elementCodename="content_section"
                   tag="div"
-                  className="mb-8 rich-text-content"
+                  className="rich-text-content"
                   html={page.contentSection}
                 />
               )}
@@ -67,7 +67,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   itemId={pageItemId}
                   elementCodename="forms_section"
                   tag="div"
-                  className="mb-8 rich-text-content"
+                  className="rich-text-content"
                   html={page.formsSection}
                 />
               )}
@@ -77,7 +77,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   itemId={page.brandPartnerItemId}
                   elementCodename="brand_disclaimer"
                   tag="div"
-                  className="mt-8 rich-text-content text-sm text-slate-600 border-t border-slate-200 pt-8"
+                  className="rich-text-content text-sm text-slate-600 border-t border-slate-200 pt-8"
                   html={page.brandDisclaimer}
                 />
               )}
