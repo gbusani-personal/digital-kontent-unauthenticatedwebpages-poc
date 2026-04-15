@@ -71,6 +71,16 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   html={page.formsSection}
                 />
               )}
+
+              {page.brandDisclaimer && (
+                <KontentEditable
+                  itemId={page.brandPartnerItemId}
+                  elementCodename="brand_disclaimer"
+                  tag="div"
+                  className="mt-8 rich-text-content text-sm text-slate-600 border-t border-slate-200 pt-8"
+                  html={page.brandDisclaimer}
+                />
+              )}
             </div>
           </div>
 

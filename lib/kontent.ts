@@ -58,6 +58,8 @@ export interface LandingPageContent {
   urlSlug: string;
   logoUrl?: string;
   logoItemId?: string;
+  brandPartnerItemId?: string;
+  brandDisclaimer?: string;
   bannerUrl?: string;
   contentSection?: string;
   formsSection?: string;
@@ -275,8 +277,8 @@ export async function getFAQContent(): Promise<FAQItem[]> {
   }
 }
 
-// Function to fetch a brand partner logo from Kontent.ai
-async function getBrandPartnerLogo(contentType = 'brand_partner_root', fieldName = 'brand_partner_logo', slug?: string): Promise<{ url?: string; itemId?: string } | undefined> {
+// Function to fetch Brand Partner Root data from Kontent.ai
+async function getBrandPartnerRoot(contentType = 'brand_partner_root', slug?: string): Promise<{ url?: string; itemId?: string; brandDisclaimer?: string } | undefined> {
   try {
     const client = getKontentClient();
 
@@ -303,14 +305,15 @@ async function getBrandPartnerLogo(contentType = 'brand_partner_root', fieldName
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
       return {
-        url: getAssetUrl(item.elements[fieldName]),
+        url: getAssetUrl(item.elements.brand_partner_logo),
         itemId: item.system?.id,
+        brandDisclaimer: item.elements.brand_disclaimer?.value || '',
       };
     }
 
     return undefined;
   } catch (error) {
-    console.error(`Error fetching brand partner logo from Kontent.ai content type ${contentType}:`, error);
+    console.error(`Error fetching Brand Partner Root from Kontent.ai content type ${contentType}:`, error);
     return undefined;
   }
 }
@@ -330,14 +333,16 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
       const formsValue = item.elements.forms_section?.value || '';
-      const brandLogo = await getBrandPartnerLogo();
+      const brandPartner = await getBrandPartnerRoot();
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,
         title: item.elements.title?.value || 'Landing Page',
         urlSlug: item.elements.url_slug?.value || normalizedSlug,
-        logoUrl: brandLogo?.url,
-        logoItemId: brandLogo?.itemId,
+        logoUrl: brandPartner?.url,
+        logoItemId: brandPartner?.itemId,
+        brandPartnerItemId: brandPartner?.itemId,
+        brandDisclaimer: brandPartner?.brandDisclaimer,
         bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: item.elements.content_section?.value || '',
         formsSection: formsValue,
@@ -363,14 +368,16 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       return null;
     }
 
-    const brandLogo = await getBrandPartnerLogo();
+    const brandPartner = await getBrandPartnerRoot();
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,
       title: found.elements.title?.value || 'Landing Page',
       urlSlug: found.elements.url_slug?.value || normalizedSlug,
-      logoUrl: brandLogo?.url,
-      logoItemId: brandLogo?.itemId,
+      logoUrl: brandPartner?.url,
+      logoItemId: brandPartner?.itemId,
+      brandPartnerItemId: brandPartner?.itemId,
+      brandDisclaimer: brandPartner?.brandDisclaimer,
       bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: found.elements.content_section?.value || '',
       formsSection: found.elements.forms_section?.value || found.elements.form_section?.value || '',
@@ -421,7 +428,7 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
 
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
-      const brandLogo = await getBrandPartnerLogo();
+      const brandLogo = await getBrandPartnerRoot();
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,
@@ -450,7 +457,7 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
       return null;
     }
 
-    const brandLogo = await getBrandPartnerLogo();
+    const brandLogo = await getBrandPartnerRoot();
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,
