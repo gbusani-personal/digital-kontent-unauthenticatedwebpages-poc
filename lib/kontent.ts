@@ -227,7 +227,8 @@ export async function getHomePageContent(): Promise<HomePageContent | null> {
     // This is a placeholder - you'll need to replace with your actual content type codename
     const response = await client
       .items()
-      .type('home_page') // Replace with your content type codename
+      .type('home_page')
+      .collection('home_page_collection')
       .toPromise();
 
     if (response.data.items.length === 0) {
@@ -260,6 +261,7 @@ export async function getFAQContent(): Promise<FAQItem[]> {
 
     const response = await client
       .items()
+      .collection('faq_collection')
       .type('faq')
       .toPromise();
 
@@ -278,42 +280,54 @@ export async function getFAQContent(): Promise<FAQItem[]> {
 }
 
 // Function to fetch Brand Partner Root data from Kontent.ai
-async function getBrandPartnerRoot(contentType = 'brand_partner_root', slug?: string): Promise<{ url?: string; itemId?: string; brandDisclaimer?: string } | undefined> {
+async function getBrandPartnerLogo(): Promise<{ url?: string; itemId?: string } | undefined> {
   try {
     const client = getKontentClient();
 
-    let response = await client
+    const response = await client
       .items()
-      .type(contentType)
+      .type('brand_partner_root')
       .limitParameter(1)
       .toPromise();
 
-    if (slug) {
-      const normalizedSlug = slug.replace(/^\/+/, '');
-      const slugResponse = await client
-        .items()
-        .type(contentType)
-        .equalsFilter('elements.url_slug', normalizedSlug)
-        .limitParameter(1)
-        .toPromise();
-
-      if (slugResponse.data.items.length > 0) {
-        response = slugResponse;
-      }
-    }
-
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
+      console.log('Brand Partner Root item for logo:', JSON.stringify(item.elements, null, 2));
       return {
         url: getAssetUrl(item.elements.brand_partner_logo),
         itemId: item.system?.id,
-        brandDisclaimer: item.elements.brand_disclaimer?.value || '',
       };
     }
 
     return undefined;
   } catch (error) {
-    console.error(`Error fetching Brand Partner Root from Kontent.ai content type ${contentType}:`, error);
+    console.error('Error fetching Brand Partner Logo from Kontent.ai:', error);
+    return undefined;
+  }
+}
+
+async function getBrandDisclaimer(): Promise<{ text?: string; itemId?: string } | undefined> {
+  try {
+    const client = getKontentClient();
+
+    const response = await client
+      .items()
+      .type('brand_partner_root')
+      .limitParameter(1)
+      .toPromise();
+
+    if (response.data.items.length > 0) {
+      const item = response.data.items[0];
+      console.log('Brand Partner Root item:', JSON.stringify(item.elements, null, 2));
+      return {
+        text: item.elements.brand_disclaimer?.value,
+        itemId: item.system?.id,
+      };
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error('Error fetching Brand Disclaimer from Kontent.ai:', error);
     return undefined;
   }
 }
@@ -333,16 +347,17 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
       const formsValue = item.elements.forms_section?.value || '';
-      const brandPartner = await getBrandPartnerRoot();
+      const brandLogo = await getBrandPartnerLogo();
+      const brandDisclaimer = await getBrandDisclaimer();
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,
         title: item.elements.title?.value || 'Landing Page',
         urlSlug: item.elements.url_slug?.value || normalizedSlug,
-        logoUrl: brandPartner?.url,
-        logoItemId: brandPartner?.itemId,
-        brandPartnerItemId: brandPartner?.itemId,
-        brandDisclaimer: brandPartner?.brandDisclaimer,
+        logoUrl: brandLogo?.url,
+        logoItemId: brandLogo?.itemId,
+        brandPartnerItemId: brandLogo?.itemId,
+        brandDisclaimer: brandDisclaimer?.text,
         bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: item.elements.content_section?.value || '',
         formsSection: formsValue,
@@ -368,16 +383,17 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       return null;
     }
 
-    const brandPartner = await getBrandPartnerRoot();
+    const brandLogo = await getBrandPartnerLogo();
+    const brandDisclaimer = await getBrandDisclaimer();
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,
       title: found.elements.title?.value || 'Landing Page',
       urlSlug: found.elements.url_slug?.value || normalizedSlug,
-      logoUrl: brandPartner?.url,
-      logoItemId: brandPartner?.itemId,
-      brandPartnerItemId: brandPartner?.itemId,
-      brandDisclaimer: brandPartner?.brandDisclaimer,
+      logoUrl: brandLogo?.url,
+      logoItemId: brandLogo?.itemId,
+      brandPartnerItemId: brandLogo?.itemId,
+      brandDisclaimer: brandDisclaimer?.text,
       bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: found.elements.content_section?.value || '',
       formsSection: found.elements.forms_section?.value || found.elements.form_section?.value || '',
@@ -398,6 +414,7 @@ export async function getMRECTiles(): Promise<MRECTile[]> {
     const response = await client
       .items()
       .type('mrec_tiles')
+      .collection('mrec_tiles_collection')
       .toPromise();
 
     // Sort by order field if available
@@ -428,7 +445,7 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
 
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
-      const brandLogo = await getBrandPartnerRoot();
+      const brandLogo = await getBrandPartnerLogo();
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,
@@ -457,7 +474,7 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
       return null;
     }
 
-    const brandLogo = await getBrandPartnerRoot();
+    const brandLogo = await getBrandPartnerLogo();
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,
@@ -483,6 +500,7 @@ export async function getFAQsBySlug(slug: string): Promise<FAQContent[]> {
     const response = await client
       .items()
       .type('faq')
+      .collection('faq_collection')
       .toPromise();
 
     const faqs = response.data.items.map((item: any) => {

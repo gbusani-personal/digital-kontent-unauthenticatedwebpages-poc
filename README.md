@@ -59,12 +59,36 @@ This project is configured to fetch content from Kontent.ai CMS. The integration
    - `landing_page` with elements:
      - `title` (Text)
      - `url_slug` (Text) - used for the page URL
-     - `brand_logo` (Asset) - logo image for the landing page
+     - `banner` (Asset) - banner image for the landing page
      - `content_section` (Rich text) - main content for the landing page
+     - `forms_section` (Rich text) - forms content
+     - `faq_s` (Modular content) - linked FAQs
+     - `mrec_tiles` (Modular content) - MREC tiles
+   - `brand_partner_root` with elements:
+     - `brand_partner_logo` (Asset) - the logo image
+     - `brand_disclaimer` (Rich text) - the disclaimer text
+   - `faq_page` with elements:
+     - `title` (Text)
+     - `url_slug` (Text) - used for the page URL
+     - `banner` (Asset) - banner image
+     - `content_section` (Rich text) - main content
+   - `faq_content` with elements:
+     - `question` (Text)
+     - `answer` (Rich text)
+   - `mrec_tiles` with elements:
+     - `title` (Text)
+     - `description` (Rich text)
+     - `image` (Asset)
+     - `cta_text` (Text)
+     - `cta_url` (Text)
 
-2. Create content items based on your content types.
+2. Create collections for organizing content:
+   - `brand_partner_root_collection` - for brand partner logo and disclaimer items
+   - `home_page_collection` - for home page content
+   - `faq_content_collection` - for FAQ content
+   - `mrec_tiles_collection` - for MREC tiles
 
-3. The application will automatically fetch and display this content.
+3. Create content items based on your content types and assign them to the appropriate collections.
 
 ### Landing Pages
 
