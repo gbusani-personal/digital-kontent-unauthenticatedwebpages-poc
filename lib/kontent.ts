@@ -259,6 +259,29 @@ export async function getFAQContent(): Promise<FAQItem[]> {
   }
 }
 
+// Function to fetch brand partner logo from Kontent.ai
+async function getBrandPartnerLogo(): Promise<string | undefined> {
+  try {
+    const client = getKontentClient();
+
+    const response = await client
+      .items()
+      .type('brand_partner_root')
+      .limitParameter(1)
+      .toPromise();
+
+    if (response.data.items.length > 0) {
+      const item = response.data.items[0];
+      return getAssetUrl(item.elements.brand_partner_logo);
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error('Error fetching brand partner logo from Kontent.ai:', error);
+    return undefined;
+  }
+}
+
 export async function getLandingPageBySlug(slug: string): Promise<LandingPageContent | null> {
   const normalizedSlug = slug.replace(/^\/+/, '');
   const client = getKontentClient();
@@ -274,10 +297,11 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
       const formsValue = item.elements.forms_section?.value || '';
+      const brandLogo = await getBrandPartnerLogo();
       return {
         title: item.elements.title?.value || 'Landing Page',
         urlSlug: item.elements.url_slug?.value || normalizedSlug,
-        logoUrl: getAssetUrl(item.elements.brand_logo),
+        logoUrl: brandLogo,
         bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: item.elements.content_section?.value || '',
         formsSection: formsValue,
@@ -303,10 +327,11 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       return null;
     }
 
+    const brandLogo = await getBrandPartnerLogo();
     return {
       title: found.elements.title?.value || 'Landing Page',
       urlSlug: found.elements.url_slug?.value || normalizedSlug,
-      logoUrl: getAssetUrl(found.elements.brand_logo),
+      logoUrl: brandLogo,
       bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: found.elements.content_section?.value || '',
       formsSection: found.elements.forms_section?.value || found.elements.form_section?.value || '',
@@ -357,10 +382,11 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
 
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
+      const brandLogo = await getBrandPartnerLogo();
       return {
         title: item.elements.title?.value || 'FAQ Page',
         urlSlug: item.elements.url_slug?.value || normalizedSlug,
-        logoUrl: getAssetUrl(item.elements.brand_logo),
+        logoUrl: brandLogo,
         bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: item.elements.content_section?.value || '',
       };
@@ -382,10 +408,11 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
       return null;
     }
 
+    const brandLogo = await getBrandPartnerLogo();
     return {
       title: found.elements.title?.value || 'FAQ Page',
       urlSlug: found.elements.url_slug?.value || normalizedSlug,
-      logoUrl: getAssetUrl(found.elements.brand_logo),
+      logoUrl: brandLogo,
       bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: found.elements.content_section?.value || '',
     };
