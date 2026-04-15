@@ -67,7 +67,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   itemId={pageItemId}
                   elementCodename="forms_section"
                   tag="div"
-                  className="mt-8 mb-8 rich-text-content border-t border-slate-200 pt-8"
+                  className="mb-8 rich-text-content"
                   html={page.formsSection}
                 />
               )}
