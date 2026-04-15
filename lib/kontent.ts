@@ -260,15 +260,29 @@ export async function getFAQContent(): Promise<FAQItem[]> {
 }
 
 // Function to fetch a brand partner logo from Kontent.ai
-async function getBrandPartnerLogo(contentType = 'brand_partner_root', fieldName = 'brand_partner_logo'): Promise<string | undefined> {
+async function getBrandPartnerLogo(contentType = 'brand_partner_root', fieldName = 'brand_partner_logo', slug?: string): Promise<string | undefined> {
   try {
     const client = getKontentClient();
 
-    const response = await client
+    let response = await client
       .items()
       .type(contentType)
       .limitParameter(1)
       .toPromise();
+
+    if (slug) {
+      const normalizedSlug = slug.replace(/^\/+/, '');
+      const slugResponse = await client
+        .items()
+        .type(contentType)
+        .equalsFilter('elements.url_slug', normalizedSlug)
+        .limitParameter(1)
+        .toPromise();
+
+      if (slugResponse.data.items.length > 0) {
+        response = slugResponse;
+      }
+    }
 
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
@@ -297,7 +311,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
       const formsValue = item.elements.forms_section?.value || '';
-      const brandLogo = await getBrandPartnerLogo('bupa_pet_insurance', 'brand_partner_logo');
+      const brandLogo = await getBrandPartnerLogo();
       return {
         title: item.elements.title?.value || 'Landing Page',
         urlSlug: item.elements.url_slug?.value || normalizedSlug,
@@ -327,7 +341,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       return null;
     }
 
-    const brandLogo = await getBrandPartnerLogo('bupa_pet_insurance', 'brand_partner_logo');
+    const brandLogo = await getBrandPartnerLogo();
     return {
       title: found.elements.title?.value || 'Landing Page',
       urlSlug: found.elements.url_slug?.value || normalizedSlug,
