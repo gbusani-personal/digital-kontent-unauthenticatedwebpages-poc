@@ -26,7 +26,7 @@ export default async function FAQPage({ params }: FAQPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <div className="rounded-3xl bg-white shadow-xl border border-slate-200 p-10">
+            <div className="rounded-3xl bg-white shadow-xl border border-slate-200 p-10" data-kontent-item-id={pageItemId}>
               <LandingPageLogo
                 logoUrl={page.logoUrl}
                 title={page.title}

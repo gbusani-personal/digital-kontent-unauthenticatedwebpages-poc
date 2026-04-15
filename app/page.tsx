@@ -40,7 +40,7 @@ export default async function Home() {
 
       {/* Hero Section */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center">
+        <div className="text-center" data-kontent-item-id={pageItemId}>
           <KontentEditable
             itemId={pageItemId}
             elementCodename="title"
@@ -48,15 +48,14 @@ export default async function Home() {
             className="text-4xl md:text-6xl font-bold text-gray-900 mb-6"
           >
             {content.title}
-            <br />
-            <KontentEditable
-              itemId={pageItemId}
-              elementCodename="subtitle"
-              tag="span"
-              className="text-blue-600"
-            >
-              {content.subtitle}
-            </KontentEditable>
+          </KontentEditable>
+          <KontentEditable
+            itemId={pageItemId}
+            elementCodename="subtitle"
+            tag="p"
+            className="text-3xl md:text-4xl font-semibold text-blue-600 mb-6"
+          >
+            {content.subtitle}
           </KontentEditable>
           <KontentEditable
             itemId={pageItemId}
