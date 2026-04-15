@@ -259,25 +259,25 @@ export async function getFAQContent(): Promise<FAQItem[]> {
   }
 }
 
-// Function to fetch brand partner logo from Kontent.ai
-async function getBrandPartnerLogo(): Promise<string | undefined> {
+// Function to fetch a brand partner logo from Kontent.ai
+async function getBrandPartnerLogo(contentType = 'brand_partner_root', fieldName = 'brand_partner_logo'): Promise<string | undefined> {
   try {
     const client = getKontentClient();
 
     const response = await client
       .items()
-      .type('brand_partner_root')
+      .type(contentType)
       .limitParameter(1)
       .toPromise();
 
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
-      return getAssetUrl(item.elements.brand_partner_logo);
+      return getAssetUrl(item.elements[fieldName]);
     }
 
     return undefined;
   } catch (error) {
-    console.error('Error fetching brand partner logo from Kontent.ai:', error);
+    console.error(`Error fetching brand partner logo from Kontent.ai content type ${contentType}:`, error);
     return undefined;
   }
 }
@@ -297,7 +297,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
       const formsValue = item.elements.forms_section?.value || '';
-      const brandLogo = await getBrandPartnerLogo();
+      const brandLogo = await getBrandPartnerLogo('bupa_pet_insurance', 'brand_partner_logo');
       return {
         title: item.elements.title?.value || 'Landing Page',
         urlSlug: item.elements.url_slug?.value || normalizedSlug,
@@ -327,7 +327,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       return null;
     }
 
-    const brandLogo = await getBrandPartnerLogo();
+    const brandLogo = await getBrandPartnerLogo('bupa_pet_insurance', 'brand_partner_logo');
     return {
       title: found.elements.title?.value || 'Landing Page',
       urlSlug: found.elements.url_slug?.value || normalizedSlug,
