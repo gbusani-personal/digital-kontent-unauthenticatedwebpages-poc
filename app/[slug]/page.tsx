@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getLandingPageBySlug } from '../../lib/kontent';
-import { landingPageStyles, getBrandStyles } from '../../lib/design-system';
+import { landingPageStyles, getBrandStyles, ds } from '../../lib/design-system';
 import KontentEditable from '../../components/KontentEditable';
 import LandingPageLogo from '../../components/LandingPageLogo';
 
@@ -25,7 +25,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
   return (
     <div style={{ ...landingPageStyles.page, ...brandStyles.page, minHeight: '100vh' }}>
       <main className="max-w-7xl mx-auto" style={landingPageStyles.layout}>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4" style={{ gap: ds.spacing.xl }}>
           {/* Main Content */}
           <div className="lg:col-span-3">
             <div
@@ -97,8 +97,8 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
           {/* MREC Tiles and FAQ Sidebar */}
           {(mrecTiles.length > 0 || faqs.length > 0) && (
-            <div className="lg:col-span-1 space-y-6">
-              <div className="space-y-4">
+            <div className="lg:col-span-1" style={{ display: 'grid', gridAutoRows: 'max-content', gap: ds.spacing.lg }}>
+              <div style={{ display: 'grid', gridAutoRows: 'max-content', gap: ds.spacing.md }}>
                 {mrecTiles.map((tile, index) => (
                   <div
                     key={index}

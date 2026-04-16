@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getLandingPageBySlug } from '../../../lib/kontent';
-import { landingPageStyles, getBrandStyles } from '../../../lib/design-system';
+import { landingPageStyles, getBrandStyles, ds } from '../../../lib/design-system';
 import KontentEditable from '../../../components/KontentEditable';
 import LandingPageLogo from '../../../components/LandingPageLogo';
 
@@ -25,12 +25,12 @@ export default async function LandingPage({ params }: LandingPageProps) {
   return (
     <div style={{ ...landingPageStyles.page, ...brandStyles.page, minHeight: '100vh' }}>
       <main className="max-w-7xl mx-auto" style={landingPageStyles.layout}>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4" style={{ gap: ds.spacing.xl }}>
           {/* Main Content */}
           <div className="lg:col-span-3">
             <div
               className="flex flex-col"
-              style={{ ...landingPageStyles.card, ...brandStyles.card }}
+              style={{ ...landingPageStyles.card, ...brandStyles.card, gap: ds.spacing.lg }}
               data-kontent-item-id={pageItemId}
             >
               <LandingPageLogo
@@ -40,20 +40,20 @@ export default async function LandingPage({ params }: LandingPageProps) {
               />
 
               {page.bannerUrl && (
-                <div className="text-center">
+                <div style={{ textAlign: 'center', marginBottom: ds.spacing.lg }}>
                   <img
                     src={page.bannerUrl}
                     alt={`${page.title} banner`}
                     className="w-full max-w-4xl mx-auto shadow-sm object-cover"
                     style={{
-                      maxHeight: landingPageStyles.bannerImage.maxHeight,
-                      borderRadius: landingPageStyles.bannerImage.borderRadius,
+                      ...landingPageStyles.bannerImage,
+                      maxWidth: '100%',
                     }}
                   />
                 </div>
               )}
 
-              <div className="text-center">
+              <div style={{ textAlign: 'center', marginBottom: ds.spacing.md }}>
                 <KontentEditable
                   itemId={pageItemId}
                   elementCodename="title"
@@ -107,7 +107,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
           {/* MREC Tiles and FAQ Sidebar */}
           {(mrecTiles.length > 0 || faqs.length > 0) && (
-            <div className="lg:col-span-1 space-y-6">
+            <div style={{ display: 'grid', gridAutoRows: 'max-content', gap: ds.spacing.lg }} className="lg:col-span-1 space-y-6">
               <div className="space-y-4">
                 {mrecTiles.map((tile, index) => (
                   <div
