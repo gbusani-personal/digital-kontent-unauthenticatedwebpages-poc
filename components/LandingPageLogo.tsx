@@ -1,3 +1,5 @@
+import { designTokens } from '../lib/design-tokens';
+
 interface LandingPageLogoProps {
   logoUrl?: string;
   title: string;
@@ -23,11 +25,16 @@ export default function LandingPageLogo({
     : {};
 
   return (
-    <div className="mb-8" {...wrapperAttributes}>
+    <div
+      {...wrapperAttributes}
+      style={{
+        marginBottom: designTokens.spacing['3xl'],
+      }}
+    >
       <img
         src={logoUrl}
         alt={`${title} logo`}
-        className="h-16 object-contain"
+        style={{ height: designTokens.sizing.logoHeight, objectFit: 'contain' }}
       />
     </div>
   );

@@ -40,6 +40,7 @@ export interface FAQPage {
   logoItemId?: string;
   bannerUrl?: string;
   contentSection?: string;
+  brandKey?: string;
 }
 
 export interface FAQContent {
@@ -60,6 +61,7 @@ export interface LandingPageContent {
   logoItemId?: string;
   brandPartnerItemId?: string;
   brandDisclaimer?: string;
+  brandKey?: string;
   bannerUrl?: string;
   contentSection?: string;
   formsSection?: string;
@@ -219,6 +221,40 @@ const getLinkedFAQs = (element: any): FAQContent[] => {
     .filter((faq: FAQContent | null): faq is FAQContent => !!faq && !!faq.question && !!faq.answer);
 };
 
+const brandCollectionMappings: Record<string, string> = {
+  'bupa': 'BUPA',
+  'bupa pet insurance': 'BUPA',
+  'bupa_pet_insurance': 'BUPA',
+  'bupa-pet-insurance': 'BUPA',
+  'bupa_pet_insurance_collection': 'BUPA',
+  'bupa-pet-insurance-collection': 'BUPA',
+};
+
+const normalizeCollectionName = (collectionName: string): string =>
+  collectionName.trim().toLowerCase().replace(/[_\-\s]+/g, ' ');
+
+function getBrandKeyFromCollection(collectionName?: string): string | undefined {
+  if (!collectionName) {
+    return undefined;
+  }
+
+  const normalized = normalizeCollectionName(collectionName);
+  if (brandCollectionMappings[normalized]) {
+    return brandCollectionMappings[normalized];
+  }
+
+  return Object.entries(brandCollectionMappings).find(([key]) => normalized.includes(key))?.[1];
+}
+
+function deriveBrandKey(collection?: string): string | undefined {
+  if (!collection) {
+    return undefined;
+  }
+
+  return getBrandKeyFromCollection(collection) ??
+    (normalizeCollectionName(collection).includes('bupa') ? 'BUPA' : undefined);
+}
+
 // Function to fetch home page content from Kontent.ai
 export async function getHomePageContent(): Promise<HomePageContent | null> {
   try {
@@ -360,6 +396,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       const collection = item.system?.collection;
       const brandLogo = await getBrandPartnerLogo(collection);
       const brandDisclaimer = await getBrandDisclaimer(collection);
+      const brandKey = deriveBrandKey(collection);
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,
@@ -369,6 +406,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
         logoItemId: brandLogo?.itemId,
         brandPartnerItemId: brandLogo?.itemId,
         brandDisclaimer: brandDisclaimer?.text,
+        brandKey,
         bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: item.elements.content_section?.value || '',
         formsSection: formsValue,
@@ -397,6 +435,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
     const collection = found.system?.collection;
     const brandLogo = await getBrandPartnerLogo(collection);
     const brandDisclaimer = await getBrandDisclaimer(collection);
+    const brandKey = deriveBrandKey(collection);
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,
@@ -406,6 +445,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       logoItemId: brandLogo?.itemId,
       brandPartnerItemId: brandLogo?.itemId,
       brandDisclaimer: brandDisclaimer?.text,
+      brandKey,
       bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: found.elements.content_section?.value || '',
       formsSection: found.elements.forms_section?.value || found.elements.form_section?.value || '',
@@ -459,6 +499,7 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
       const item = response.data.items[0];
       const collection = item.system?.collection;
       const brandLogo = await getBrandPartnerLogo(collection);
+      const brandKey = deriveBrandKey(collection);
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,
@@ -468,6 +509,7 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
         logoItemId: brandLogo?.itemId,
         bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: item.elements.content_section?.value || '',
+        brandKey,
       };
     }
 
@@ -489,6 +531,7 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
 
     const collection = found.system?.collection;
     const brandLogo = await getBrandPartnerLogo(collection);
+    const brandKey = deriveBrandKey(collection);
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,
@@ -498,6 +541,7 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
       logoItemId: brandLogo?.itemId,
       bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: found.elements.content_section?.value || '',
+      brandKey,
     };
   } catch (error) {
     console.error(`Error fetching FAQ page content for slug ${slug}:`, error);

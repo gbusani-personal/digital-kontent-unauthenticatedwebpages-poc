@@ -5,6 +5,7 @@ interface KontentEditableProps {
   elementCodename: string;
   tag?: keyof React.JSX.IntrinsicElements;
   className?: string;
+  style?: React.CSSProperties;
   html?: string;
   children?: ReactNode;
 }
@@ -14,6 +15,7 @@ export default function KontentEditable({
   elementCodename,
   tag = 'div',
   className,
+  style,
   html,
   children,
 }: KontentEditableProps) {
@@ -29,6 +31,7 @@ export default function KontentEditable({
     return (
       <Tag
         className={className}
+        style={style}
         {...dataAttributes}
         dangerouslySetInnerHTML={{ __html: html }}
       />
@@ -36,7 +39,7 @@ export default function KontentEditable({
   }
 
   return (
-    <Tag className={className} {...dataAttributes}>
+    <Tag className={className} style={style} {...dataAttributes}>
       {children}
     </Tag>
   );

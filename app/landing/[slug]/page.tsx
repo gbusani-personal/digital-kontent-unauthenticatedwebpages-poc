@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getLandingPageBySlug } from '../../../lib/kontent';
+import { landingPageStyles, getBrandStyles } from '../../../lib/design-system';
 import KontentEditable from '../../../components/KontentEditable';
 import LandingPageLogo from '../../../components/LandingPageLogo';
 
@@ -15,38 +16,49 @@ export default async function LandingPage({ params }: LandingPageProps) {
   const mrecTiles = page?.mrecTiles ?? [];
   const faqs = page?.faqs ?? [];
   const pageItemId = page?.itemId;
+  const brandStyles = getBrandStyles(page?.brandKey);
 
   if (!page) {
     return notFound();
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-blue-100 py-16">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div style={{ ...landingPageStyles.page, ...brandStyles.page }}>
+      <main className="max-w-7xl mx-auto" style={landingPageStyles.layout}>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <div className="flex flex-col space-y-8 p-10 rounded-3xl bg-white shadow-xl border border-slate-200" data-kontent-item-id={pageItemId}>
+            <div
+              className="flex flex-col"
+              style={{ ...landingPageStyles.card, ...brandStyles.card }}
+              data-kontent-item-id={pageItemId}
+            >
               <LandingPageLogo
                 logoUrl={page.logoUrl}
                 title={page.title}
                 logoItemId={page.logoItemId}
               />
+
               {page.bannerUrl && (
                 <div className="text-center">
                   <img
                     src={page.bannerUrl}
                     alt={`${page.title} banner`}
-                    className="w-full max-w-4xl mx-auto rounded-lg shadow-md max-h-48 object-cover"
+                    className="w-full max-w-4xl mx-auto shadow-sm object-cover"
+                    style={{
+                      maxHeight: landingPageStyles.bannerImage.maxHeight,
+                      borderRadius: landingPageStyles.bannerImage.borderRadius,
+                    }}
                   />
                 </div>
               )}
+
               <div className="text-center">
                 <KontentEditable
                   itemId={pageItemId}
                   elementCodename="title"
                   tag="h1"
-                  className="text-4xl sm:text-5xl font-bold text-slate-900"
+                  style={{ ...landingPageStyles.contentHeading, ...brandStyles.contentHeading }}
                 >
                   {page.title}
                 </KontentEditable>
@@ -59,6 +71,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   tag="div"
                   className="rich-text-content"
                   html={page.contentSection}
+                  style={{ ...landingPageStyles.bodyText, ...brandStyles.bodyText }}
                 />
               )}
 
@@ -69,6 +82,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   tag="div"
                   className="rich-text-content"
                   html={page.formsSection}
+                  style={{ ...landingPageStyles.bodyText, ...brandStyles.bodyText }}
                 />
               )}
 
@@ -77,7 +91,14 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   itemId={page.brandPartnerItemId}
                   elementCodename="brand_disclaimer"
                   tag="div"
-                  className="rich-text-content text-sm text-slate-600 border-t border-slate-200 pt-8"
+                  className="rich-text-content"
+                  style={{
+                    ...landingPageStyles.brandDisclaimer,
+                    ...brandStyles.brandDisclaimer,
+                    paddingTop: landingPageStyles.card.padding,
+                    borderTopWidth: '1px',
+                    borderTopStyle: 'solid',
+                  }}
                   html={page.brandDisclaimer}
                 />
               )}
@@ -89,7 +110,11 @@ export default async function LandingPage({ params }: LandingPageProps) {
             <div className="lg:col-span-1 space-y-6">
               <div className="space-y-4">
                 {mrecTiles.map((tile, index) => (
-                  <div key={index} className="rounded-lg bg-white shadow-md border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow aspect-square">
+                  <div
+                    key={index}
+                    className="overflow-hidden hover:shadow-lg transition-shadow"
+                    style={{ ...landingPageStyles.tileCard, ...brandStyles.tileCard }}
+                  >
                     {tile.imageUrl && (
                       <img
                         src={tile.imageUrl}
@@ -102,20 +127,28 @@ export default async function LandingPage({ params }: LandingPageProps) {
               </div>
 
               {faqs.length > 0 && (
-                <div className="rounded-3xl bg-white shadow-xl border border-slate-200 p-6">
-                  <h2 className="text-xl font-semibold text-slate-900 mb-4">Frequently Asked Questions</h2>
+                <div style={landingPageStyles.faqCard}>
+                  <h2 style={{ ...landingPageStyles.sectionTitle, ...brandStyles.sectionTitle }} className="mb-4">
+                    Frequently Asked Questions
+                  </h2>
                   <div className="space-y-3">
                     {faqs.map((faq, index) => (
                       <details
                         key={index}
-                        className="rounded-lg border border-slate-200 bg-slate-50 p-4 group hover:border-blue-300 transition-colors"
+                        className="group transition-colors"
+                        style={{ ...landingPageStyles.faqItem, ...brandStyles.faqItem }}
                       >
-                        <summary className="flex cursor-pointer items-center justify-between font-semibold text-slate-900 hover:text-blue-600 transition-colors">
+                        <summary
+                          className="flex cursor-pointer items-center justify-between"
+                          style={{
+                            ...landingPageStyles.faqQuestion,                            ...brandStyles.faqQuestion,                            transition: 'color 180ms ease-in-out',
+                          }}
+                        >
                           <KontentEditable
                             itemId={faq.itemId}
                             elementCodename="question"
                             tag="span"
-                            className="text-slate-900"
+                            style={landingPageStyles.faqQuestion}
                           >
                             {faq.question}
                           </KontentEditable>
@@ -123,7 +156,10 @@ export default async function LandingPage({ params }: LandingPageProps) {
                             ▼
                           </span>
                         </summary>
-                        <div className="mt-3 rich-text-content text-slate-700 leading-relaxed">
+                        <div
+                          className="mt-3 rich-text-content"
+                          style={{ ...landingPageStyles.faqAnswer, ...brandStyles.bodyText }}
+                        >
                           <KontentEditable
                             itemId={faq.itemId}
                             elementCodename="answer"
