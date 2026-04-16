@@ -228,6 +228,12 @@ const brandCollectionMappings: Record<string, string> = {
   'bupa-pet-insurance': 'BUPA',
   'bupa_pet_insurance_collection': 'BUPA',
   'bupa-pet-insurance-collection': 'BUPA',
+  'hcf': 'HCF',
+  'hcf pet insurance': 'HCF',
+  'hcf_pet_insurance': 'HCF',
+  'hcf-pet-insurance': 'HCF',
+  'hcf_pet_insurance_collection': 'HCF',
+  'hcf-pet-insurance-collection': 'HCF',
 };
 
 const normalizeCollectionName = (collectionName: string): string =>
@@ -252,8 +258,12 @@ function deriveBrandKey(collection?: string): string | undefined {
   }
 
   return getBrandKeyFromCollection(collection) ??
-    (normalizeCollectionName(collection).includes('bupa') ? 'BUPA' : undefined);
+    (normalizeCollectionName(collection).includes('bupa') ? 'BUPA' : 
+     normalizeCollectionName(collection).includes('hcf') ? 'HCF' : 
+     undefined);
 }
+
+export { deriveBrandKey };
 
 // Function to fetch home page content from Kontent.ai
 export async function getHomePageContent(): Promise<HomePageContent | null> {

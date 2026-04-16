@@ -23,7 +23,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
   }
 
   return (
-    <div style={{ ...landingPageStyles.page, ...brandStyles.page }}>
+    <div style={{ ...landingPageStyles.page, ...brandStyles.page, minHeight: '100vh' }}>
       <main className="max-w-7xl mx-auto" style={landingPageStyles.layout}>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}

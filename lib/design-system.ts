@@ -44,6 +44,44 @@ const brandThemeMappings: Record<string, Record<string, any>> = {
       borderColor: '#cfe1fd',
     },
   },
+  HCF: {
+    page: {
+      background: 'linear-gradient(135deg, #e6f5f1 0%, #ffffff 100%)',
+      color: '#003d2d',
+    },
+    card: {
+      borderColor: '#a8d5ca',
+      backgroundColor: '#ffffff',
+    },
+    contentHeading: {
+      color: '#005a42',
+    },
+    sectionTitle: {
+      color: '#008060',
+    },
+    bodyText: {
+      color: '#334155',
+    },
+    faqCard: {
+      backgroundColor: '#f0faf7',
+      borderColor: '#cce8e0',
+    },
+    faqItem: {
+      backgroundColor: '#e6f5f1',
+      borderColor: '#a8d5ca',
+    },
+    faqQuestion: {
+      color: '#004d38',
+    },
+    tileCard: {
+      backgroundColor: '#f0faf7',
+      borderColor: '#a8d5ca',
+    },
+    brandDisclaimer: {
+      color: '#475569',
+      borderColor: '#cce8e0',
+    },
+  },
 };
 
 export function getBrandStyles(brandKey?: string) {
