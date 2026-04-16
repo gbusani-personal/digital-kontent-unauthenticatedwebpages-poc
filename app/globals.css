@@ -19,6 +19,15 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 /* Rich text content styling */
 .rich-text-content h1 {
   @apply text-3xl font-bold text-slate-900 mt-8 mb-4 first:mt-0;

@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation';
 import { getFAQPageBySlug, getMRECTiles, getFAQsBySlug } from '../../../lib/kontent';
 import KontentEditable from '../../../components/KontentEditable';
 import LandingPageLogo from '../../../components/LandingPageLogo';
+import { landingPageStyles } from '../../../lib/design-system';
+import BannerImage from '../../../components/BannerImage';
 
 interface FAQPageProps {
   params: Promise<{
@@ -33,11 +35,10 @@ export default async function FAQPage({ params }: FAQPageProps) {
                 logoItemId={page.logoItemId}
               />
               {page.bannerUrl && (
-                <div className="mb-8 text-center">
-                  <img
+                <div className="text-center mb-4 sm:mb-6">
+                  <BannerImage
                     src={page.bannerUrl}
                     alt={`${page.title} banner`}
-                    className="w-full max-w-4xl mx-auto rounded-lg shadow-md"
                   />
                 </div>
               )}

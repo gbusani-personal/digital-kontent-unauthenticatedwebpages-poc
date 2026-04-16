@@ -54,10 +54,10 @@ const brandThemeMappings: Record<string, Record<string, any>> = {
       backgroundColor: '#ffffff',
     },
     contentHeading: {
-      color: '#005a42',
+      color: '#E0004D',
     },
     sectionTitle: {
-      color: '#008060',
+      color: '#E0004D',
     },
     bodyText: {
       color: '#334155',

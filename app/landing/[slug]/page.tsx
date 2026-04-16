@@ -3,6 +3,8 @@ import { getLandingPageBySlug } from '../../../lib/kontent';
 import { landingPageStyles, getBrandStyles, ds } from '../../../lib/design-system';
 import KontentEditable from '../../../components/KontentEditable';
 import LandingPageLogo from '../../../components/LandingPageLogo';
+import BannerImage from '../../../components/BannerImage';
+import Image from 'next/image';
 
 interface LandingPageProps {
   params: Promise<{
@@ -44,14 +46,9 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
               {page.bannerUrl && (
                 <div className="text-center mb-4 sm:mb-6">
-                  <img
+                  <BannerImage
                     src={page.bannerUrl}
                     alt={`${page.title} banner`}
-                    className="w-full rounded-lg sm:rounded-xl object-cover"
-                    style={{
-                      maxHeight: landingPageStyles.bannerImage.maxHeight,
-                      borderRadius: landingPageStyles.bannerImage.borderRadius,
-                    }}
                   />
                 </div>
               )}

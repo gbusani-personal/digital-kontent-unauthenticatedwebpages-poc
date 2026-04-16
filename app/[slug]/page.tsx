@@ -3,6 +3,7 @@ import { getLandingPageBySlug } from '../../lib/kontent';
 import { landingPageStyles, getBrandStyles, ds } from '../../lib/design-system';
 import KontentEditable from '../../components/KontentEditable';
 import LandingPageLogo from '../../components/LandingPageLogo';
+import BannerImage from '../../components/BannerImage';
 
 interface LandingPageProps {
   params: Promise<{
@@ -39,11 +40,10 @@ export default async function LandingPage({ params }: LandingPageProps) {
                 logoItemId={page.logoItemId}
               />
               {page.bannerUrl && (
-                <div className="text-center">
-                  <img
+                <div className="text-center mb-4 sm:mb-6">
+                  <BannerImage
                     src={page.bannerUrl}
                     alt={`${page.title} banner`}
-                    className="w-full max-w-4xl mx-auto rounded-lg shadow-md max-h-48 object-cover"
                   />
                 </div>
               )}
