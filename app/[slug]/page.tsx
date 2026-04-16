@@ -24,12 +24,12 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
   return (
     <div style={{ ...landingPageStyles.page, ...brandStyles.page, minHeight: '100vh' }}>
-      <main className="max-w-7xl mx-auto" style={landingPageStyles.layout}>
-        <div className="grid grid-cols-1 lg:grid-cols-4" style={{ gap: ds.spacing.xl }}>
+      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8" style={landingPageStyles.layout}>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3">
             <div
-              className="flex flex-col space-y-8 p-10 rounded-3xl"
+              className="flex flex-col p-4 sm:p-6 lg:p-10 rounded-lg sm:rounded-xl lg:rounded-3xl space-y-4 sm:space-y-6"
               style={{ ...landingPageStyles.card, ...brandStyles.card }}
               data-kontent-item-id={pageItemId}
             >
