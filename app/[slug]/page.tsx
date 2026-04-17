@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { getLandingPageBySlug } from '../../lib/kontent';
 import { landingPageStyles, getBrandStyles, ds } from '../../lib/design-system';
 import KontentEditable from '../../components/KontentEditable';
+import ExpandablePrivacyNotice from '../../components/ExpandablePrivacyNotice';
 import LandingPageLogo from '../../components/LandingPageLogo';
 import BannerImage from '../../components/BannerImage';
 
@@ -59,13 +60,10 @@ export default async function LandingPage({ params }: LandingPageProps) {
               </div>
 
               {page.privacyCollectionNotice && (
-                <KontentEditable
+                <ExpandablePrivacyNotice
                   itemId={pageItemId}
-                  elementCodename="privacy_collection_notice"
-                  tag="div"
-                  className="rich-text-content"
-                  style={{ ...landingPageStyles.bodyText, ...brandStyles.bodyText }}
                   html={page.privacyCollectionNotice}
+                  brandKey={page.brandKey}
                 />
               )}
 
