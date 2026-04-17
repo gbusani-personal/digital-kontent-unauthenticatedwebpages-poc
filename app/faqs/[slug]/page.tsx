@@ -86,21 +86,13 @@ export default async function FAQPage({ params }: FAQPageProps) {
                         ▼
                       </span>
                     </summary>
-                    <div className="mt-4 rich-text-content text-slate-700 leading-relaxed">
-                      <KontentEditable
-                        itemId={faq.itemId}
-                        elementCodename="answer"
-                        tag="div"
-                        html={faq.answer}
-                                          <KontentEditable
-                                            itemId={faq.itemId}
-                                            elementCodename="answer"
-                                            tag="div"
-                                            className="mt-4 rich-text-content"
-                                            html={faq.answer}
-                                          />
-                      />
-                    </div>
+                    <KontentEditable
+                      itemId={faq.itemId}
+                      elementCodename="answer"
+                      tag="div"
+                      className="mt-4 rich-text-content"
+                      html={faq.answer}
+                    />
                       </details>
                     ))}
                   </div>
