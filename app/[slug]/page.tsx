@@ -144,6 +144,14 @@ export default async function LandingPage({ params }: LandingPageProps) {
                           style={{ ...landingPageStyles.faqAnswer, ...brandStyles.bodyText }}
                         >
                           <div dangerouslySetInnerHTML={{ __html: faq.answer }} />
+                                                <KontentEditable
+                                                  itemId={faq.itemId}
+                                                  elementCodename="answer"
+                                                  tag="div"
+                                                  className="mt-3 rich-text-content"
+                                                  style={{ ...landingPageStyles.faqAnswer, ...brandStyles.bodyText }}
+                                                  html={faq.answer}
+                                                />
                         </div>
                       </details>
                     ))}

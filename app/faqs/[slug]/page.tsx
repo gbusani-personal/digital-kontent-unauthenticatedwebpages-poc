@@ -92,6 +92,13 @@ export default async function FAQPage({ params }: FAQPageProps) {
                         elementCodename="answer"
                         tag="div"
                         html={faq.answer}
+                                          <KontentEditable
+                                            itemId={faq.itemId}
+                                            elementCodename="answer"
+                                            tag="div"
+                                            className="mt-4 rich-text-content"
+                                            html={faq.answer}
+                                          />
                       />
                     </div>
                       </details>

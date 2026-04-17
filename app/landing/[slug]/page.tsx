@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+﻿import { notFound } from 'next/navigation';
 import { getLandingPageBySlug } from '../../../lib/kontent';
 import { landingPageStyles, getBrandStyles, ds } from '../../../lib/design-system';
 import KontentEditable from '../../../components/KontentEditable';
@@ -142,7 +142,9 @@ export default async function LandingPage({ params }: LandingPageProps) {
                         <summary
                           className="flex cursor-pointer items-center justify-between"
                           style={{
-                            ...landingPageStyles.faqQuestion,                            ...brandStyles.faqQuestion,                            transition: 'color 180ms ease-in-out',
+                            ...landingPageStyles.faqQuestion,
+                            ...brandStyles.faqQuestion,
+                            transition: 'color 180ms ease-in-out',
                           }}
                         >
                           <KontentEditable
@@ -157,17 +159,14 @@ export default async function LandingPage({ params }: LandingPageProps) {
                             ▼
                           </span>
                         </summary>
-                        <div
+                        <KontentEditable
+                          itemId={faq.itemId}
+                          elementCodename="answer"
+                          tag="div"
                           className="mt-3 rich-text-content"
                           style={{ ...landingPageStyles.faqAnswer, ...brandStyles.bodyText }}
-                        >
-                          <KontentEditable
-                            itemId={faq.itemId}
-                            elementCodename="answer"
-                            tag="div"
-                            html={faq.answer}
-                          />
-                        </div>
+                          html={faq.answer}
+                        />
                       </details>
                     ))}
                   </div>
