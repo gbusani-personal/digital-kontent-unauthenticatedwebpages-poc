@@ -90,7 +90,7 @@ export default function ExpandablePrivacyNotice({
       </div>
 
       {hasExpandableContent && (
-        <div id={contentId} hidden={!isExpanded}>
+        <div id={contentId} hidden={!isExpanded} style={{ marginTop: ds.spacing.md }}>
           <KontentEditable
             itemId={itemId}
             elementCodename={elementCodename}
