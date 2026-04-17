@@ -58,6 +58,17 @@ export default async function LandingPage({ params }: LandingPageProps) {
                 </KontentEditable>
               </div>
 
+              {page.privacyCollectionNotice && (
+                <KontentEditable
+                  itemId={pageItemId}
+                  elementCodename="privacy_collection_notice"
+                  tag="div"
+                  className="rich-text-content"
+                  style={{ ...landingPageStyles.bodyText, ...brandStyles.bodyText }}
+                  html={page.privacyCollectionNotice}
+                />
+              )}
+
               {page.contentSection && (
                 <KontentEditable
                   itemId={pageItemId}
@@ -75,6 +86,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   elementCodename="forms_section"
                   tag="div"
                   className="rich-text-content"
+                  style={{ ...landingPageStyles.bodyText, ...brandStyles.bodyText }}
                   html={page.formsSection}
                 />
               )}

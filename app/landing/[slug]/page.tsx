@@ -58,12 +58,22 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   itemId={pageItemId}
                   elementCodename="title"
                   tag="h1"
-                  className="text-2xl sm:text-3xl lg:text-4xl font-bold"
                   style={{ ...landingPageStyles.contentHeading, ...brandStyles.contentHeading }}
                 >
                   {page.title}
                 </KontentEditable>
               </div>
+
+              {page.privacyCollectionNotice && (
+                <KontentEditable
+                  itemId={pageItemId}
+                  elementCodename="privacy_collection_notice"
+                  tag="div"
+                  className="rich-text-content"
+                  html={page.privacyCollectionNotice}
+                  style={{ ...landingPageStyles.bodyText, ...brandStyles.bodyText }}
+                />
+              )}
 
               {page.contentSection && (
                 <KontentEditable

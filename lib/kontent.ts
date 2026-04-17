@@ -65,6 +65,7 @@ export interface LandingPageContent {
   bannerUrl?: string;
   contentSection?: string;
   formsSection?: string;
+  privacyCollectionNotice?: string;
   mrecTiles?: MRECTile[];
   faqs?: FAQContent[];
 }
@@ -420,6 +421,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
         bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: item.elements.content_section?.value || '',
         formsSection: formsValue,
+        privacyCollectionNotice: item.elements.privacy_collection_notice?.value || '',
         mrecTiles: getLinkedMRECTiles(item.elements.mrec_tiles),
         faqs: getLinkedFAQs(item.elements.faq_s),
       };
@@ -459,6 +461,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: found.elements.content_section?.value || '',
       formsSection: found.elements.forms_section?.value || found.elements.form_section?.value || '',
+      privacyCollectionNotice: found.elements.privacy_collection_notice?.value || '',
       mrecTiles: getLinkedMRECTiles(found.elements.mrec_tiles),
       faqs: getLinkedFAQs(found.elements.faq_s),
     };
