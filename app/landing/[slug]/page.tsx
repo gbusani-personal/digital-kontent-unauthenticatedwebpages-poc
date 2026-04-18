@@ -29,7 +29,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
     <div style={{ ...landingPageStyles.page, ...brandStyles.page, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <main
         className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8"
-        style={landingPageStyles.layout}
+        style={{ ...landingPageStyles.layout, flex: 1 }}
       >
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {/* Main Content */}
@@ -92,23 +92,6 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   className="rich-text-content"
                   html={page.formsSection}
                   style={{ ...landingPageStyles.bodyText, ...brandStyles.bodyText }}
-                />
-              )}
-
-              {page.brandDisclaimer && (
-                <KontentEditable
-                  itemId={page.brandPartnerItemId}
-                  elementCodename="brand_disclaimer"
-                  tag="div"
-                  className="rich-text-content"
-                  style={{
-                    ...landingPageStyles.brandDisclaimer,
-                    ...brandStyles.brandDisclaimer,
-                    paddingTop: landingPageStyles.card.padding,
-                    borderTopWidth: '1px',
-                    borderTopStyle: 'solid',
-                  }}
-                  html={page.brandDisclaimer}
                 />
               )}
             </div>
@@ -184,6 +167,27 @@ export default async function LandingPage({ params }: LandingPageProps) {
           )}
         </div>
       </main>
+
+      {page.brandDisclaimer && (
+        <footer className="w-full px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8" aria-label="Brand disclaimer">
+          <div className="max-w-7xl mx-auto">
+            <KontentEditable
+              itemId={page.brandPartnerItemId}
+              elementCodename="brand_disclaimer"
+              tag="div"
+              className="rich-text-content"
+              style={{
+                ...landingPageStyles.brandDisclaimer,
+                ...brandStyles.brandDisclaimer,
+                borderTopWidth: '1px',
+                borderTopStyle: 'solid',
+                paddingTop: ds.spacing.lg,
+              }}
+              html={page.brandDisclaimer}
+            />
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
