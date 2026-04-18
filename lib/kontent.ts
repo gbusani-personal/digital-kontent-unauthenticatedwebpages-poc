@@ -40,6 +40,8 @@ export interface FAQPage {
   logoItemId?: string;
   bannerUrl?: string;
   contentSection?: string;
+  contactPhone?: string;
+  portalLoginUrl?: string;
   brandKey?: string;
 }
 
@@ -60,6 +62,7 @@ export interface LandingPageContent {
   logoUrl?: string;
   logoItemId?: string;
   brandPartnerItemId?: string;
+  brandPartnerDetailsItemId?: string;
   brandDisclaimer?: string;
   brandKey?: string;
   bannerUrl?: string;
@@ -68,6 +71,8 @@ export interface LandingPageContent {
   privacyCollectionNotice?: string;
   mrecTiles?: MRECTile[];
   faqs?: FAQContent[];
+  contactPhone?: string;
+  portalLoginUrl?: string;
 }
 
 const getAssetUrl = (element: any): string | undefined => {
@@ -389,6 +394,256 @@ async function getBrandDisclaimer(collection?: string): Promise<{ text?: string;
   }
 }
 
+const getElementStringValue = (element: any): string | undefined => {
+  if (!element) {
+    return undefined;
+  }
+
+  const value = element.value;
+
+  if (typeof value === 'string') {
+    return value.trim() || undefined;
+  }
+
+  if (Array.isArray(value) && value.length > 0) {
+    const first = value[0];
+
+    if (typeof first === 'string') {
+      return first.trim() || undefined;
+    }
+
+    if (first && typeof first === 'object') {
+      if (typeof first.url === 'string') {
+        return first.url;
+      }
+      if (typeof first.value === 'string') {
+        return first.value.trim() || undefined;
+      }
+    }
+  }
+
+  if (value && typeof value === 'object') {
+    if (typeof value.url === 'string') {
+      return value.url;
+    }
+    if (typeof value.value === 'string') {
+      return value.value.trim() || undefined;
+    }
+  }
+
+  return undefined;
+};
+
+const extractFirstLinkedItem = (element: any): any | undefined => {
+  if (!element) {
+    return undefined;
+  }
+
+  if (Array.isArray(element.linkedItems) && element.linkedItems.length > 0) {
+    return element.linkedItems[0];
+  }
+
+  const rawValue = element.value;
+  if (!Array.isArray(rawValue) || rawValue.length === 0) {
+    return undefined;
+  }
+
+  const first = rawValue[0];
+  if (!first) {
+    return undefined;
+  }
+
+  if (first.elements) {
+    return first;
+  }
+
+  if (first.item?.elements) {
+    return first.item;
+  }
+
+  return undefined;
+};
+
+const extractLinkedItemCodenames = (element: any): string[] => {
+  if (!element) {
+    return [];
+  }
+
+  const codenames = new Set<string>();
+
+  if (Array.isArray(element.linkedItems)) {
+    for (const linked of element.linkedItems) {
+      const codename = linked?.system?.codename || linked?.codename;
+      if (typeof codename === 'string' && codename.trim()) {
+        codenames.add(codename);
+      }
+    }
+  }
+
+  if (Array.isArray(element.value)) {
+    for (const valueItem of element.value) {
+      if (typeof valueItem === 'string' && valueItem.trim()) {
+        codenames.add(valueItem);
+        continue;
+      }
+
+      const codename =
+        valueItem?.codename ||
+        valueItem?.itemCodename ||
+        valueItem?.system?.codename ||
+        valueItem?.item?.system?.codename;
+
+      if (typeof codename === 'string' && codename.trim()) {
+        codenames.add(codename);
+      }
+    }
+  }
+
+  return Array.from(codenames);
+};
+
+const findValueByKeyPattern = (elements: Record<string, any>, patterns: RegExp[]): string | undefined => {
+  for (const key of Object.keys(elements || {})) {
+    if (!patterns.some((pattern) => pattern.test(key))) {
+      continue;
+    }
+
+    const value = getElementStringValue(elements[key]);
+    if (value) {
+      return value;
+    }
+  }
+
+  return undefined;
+};
+
+const resolveBrandPartnerDetailsItem = (rootItem: any): any | undefined => {
+  const rootElements = rootItem?.elements || {};
+
+  if (rootElements.brand_partner_info) {
+    const infoMatch = extractFirstLinkedItem(rootElements.brand_partner_info);
+    if (infoMatch) {
+      return infoMatch;
+    }
+  }
+
+  if (rootElements.brand_partner_details) {
+    const directMatch = extractFirstLinkedItem(rootElements.brand_partner_details);
+    if (directMatch) {
+      return directMatch;
+    }
+  }
+
+  // Fallback for environments where the linked-item codename differs.
+  for (const [key, element] of Object.entries(rootElements)) {
+    if (!/detail/i.test(key)) {
+      continue;
+    }
+
+    const linkedItem = extractFirstLinkedItem(element);
+    if (linkedItem) {
+      return linkedItem;
+    }
+  }
+
+  return undefined;
+};
+
+const extractHeaderInfoFromElements = (elements: Record<string, any>) => {
+  const phone =
+    getElementStringValue(elements.brand_partner_phone) ||
+    getElementStringValue(elements.phone_number) ||
+    getElementStringValue(elements.phone) ||
+    getElementStringValue(elements.contact_phone) ||
+    getElementStringValue(elements.customer_service_phone) ||
+    getElementStringValue(elements.support_phone_number) ||
+    findValueByKeyPattern(elements, [/phone/i, /contact/i, /support/i]);
+
+  const portalLoginUrl =
+    getElementStringValue(elements.brand_partner_csp_url) ||
+    getElementStringValue(elements.portal_login_url) ||
+    getElementStringValue(elements.portal_url) ||
+    getElementStringValue(elements.login_url) ||
+    getElementStringValue(elements.login_link) ||
+    getElementStringValue(elements.member_login_url) ||
+    findValueByKeyPattern(elements, [/portal/i, /login/i, /member.*url/i]);
+
+  return {
+    phone,
+    portalLoginUrl,
+  };
+};
+
+async function getBrandPartnerHeaderInfo(collection?: string): Promise<{ phone?: string; portalLoginUrl?: string; itemId?: string } | undefined> {
+  try {
+    const client = getKontentClient();
+
+    const query = client
+      .items()
+      .type('brand_partner_root')
+      .depthParameter(2)
+      .limitParameter(1);
+
+    if (collection) {
+      query.collection(collection);
+    }
+
+    const response = await query.toPromise();
+
+    if (response.data.items.length === 0) {
+      return undefined;
+    }
+
+    const rootItem = response.data.items[0];
+    const rootElements = rootItem.elements || {};
+    const linkedDetailsElement = rootElements.brand_partner_info || rootElements.brand_partner_details;
+    const linkedDetailCodenames = extractLinkedItemCodenames(linkedDetailsElement);
+
+    let detailsItem = resolveBrandPartnerDetailsItem(rootItem);
+
+    // Fallback for cases where linked items are not hydrated on the root response.
+    if (!detailsItem) {
+      const detailsQuery = client
+        .items()
+        .type('brand_partner_details')
+        .limitParameter(50);
+
+      if (collection) {
+        detailsQuery.collection(collection);
+      }
+
+      const detailsResponse = await detailsQuery.toPromise();
+
+      if (detailsResponse.data.items.length > 0) {
+        if (linkedDetailCodenames.length > 0) {
+          detailsItem = detailsResponse.data.items.find((candidate: any) =>
+            linkedDetailCodenames.includes(candidate?.system?.codename)
+          );
+        }
+
+        if (!detailsItem) {
+          detailsItem = detailsResponse.data.items.find((candidate: any) => {
+            const info = extractHeaderInfoFromElements(candidate?.elements || {});
+            return Boolean(info.phone || info.portalLoginUrl);
+          }) || detailsResponse.data.items[0];
+        }
+      }
+    }
+
+    const detailsInfo = extractHeaderInfoFromElements(detailsItem?.elements || {});
+    const rootInfo = extractHeaderInfoFromElements(rootElements);
+
+    return {
+      phone: detailsInfo.phone || rootInfo.phone,
+      portalLoginUrl: detailsInfo.portalLoginUrl || rootInfo.portalLoginUrl,
+      itemId: detailsItem?.system?.id,
+    };
+  } catch (error) {
+    console.error('Error fetching Brand Partner Details from Kontent.ai:', error);
+    return undefined;
+  }
+}
+
 export async function getLandingPageBySlug(slug: string): Promise<LandingPageContent | null> {
   const normalizedSlug = slug.replace(/^\/+/, '');
   const client = getKontentClient();
@@ -408,6 +663,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       const brandLogo = await getBrandPartnerLogo(collection);
       const brandDisclaimer = await getBrandDisclaimer(collection);
       const brandKey = deriveBrandKey(collection);
+      const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,
@@ -416,7 +672,10 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
         logoUrl: brandLogo?.url,
         logoItemId: brandLogo?.itemId,
         brandPartnerItemId: brandLogo?.itemId,
+        brandPartnerDetailsItemId: brandHeaderInfo?.itemId,
         brandDisclaimer: brandDisclaimer?.text,
+        contactPhone: brandHeaderInfo?.phone,
+        portalLoginUrl: brandHeaderInfo?.portalLoginUrl,
         brandKey,
         bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: item.elements.content_section?.value || '',
@@ -447,6 +706,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
     const collection = found.system?.collection;
     const brandLogo = await getBrandPartnerLogo(collection);
     const brandDisclaimer = await getBrandDisclaimer(collection);
+    const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
     const brandKey = deriveBrandKey(collection);
     return {
       itemId: found.system?.id,
@@ -456,7 +716,10 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       logoUrl: brandLogo?.url,
       logoItemId: brandLogo?.itemId,
       brandPartnerItemId: brandLogo?.itemId,
+      brandPartnerDetailsItemId: brandHeaderInfo?.itemId,
       brandDisclaimer: brandDisclaimer?.text,
+      contactPhone: brandHeaderInfo?.phone,
+      portalLoginUrl: brandHeaderInfo?.portalLoginUrl,
       brandKey,
       bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: found.elements.content_section?.value || '',
@@ -513,6 +776,7 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
       const collection = item.system?.collection;
       const brandLogo = await getBrandPartnerLogo(collection);
       const brandKey = deriveBrandKey(collection);
+      const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,
@@ -522,6 +786,8 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
         logoItemId: brandLogo?.itemId,
         bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: item.elements.content_section?.value || '',
+        contactPhone: brandHeaderInfo?.phone,
+        portalLoginUrl: brandHeaderInfo?.portalLoginUrl,
         brandKey,
       };
     }
@@ -544,6 +810,7 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
 
     const collection = found.system?.collection;
     const brandLogo = await getBrandPartnerLogo(collection);
+    const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
     const brandKey = deriveBrandKey(collection);
     return {
       itemId: found.system?.id,
@@ -554,6 +821,8 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
       logoItemId: brandLogo?.itemId,
       bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: found.elements.content_section?.value || '',
+      contactPhone: brandHeaderInfo?.phone,
+      portalLoginUrl: brandHeaderInfo?.portalLoginUrl,
       brandKey,
     };
   } catch (error) {

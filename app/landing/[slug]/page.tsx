@@ -3,9 +3,8 @@ import { getLandingPageBySlug } from '../../../lib/kontent';
 import { landingPageStyles, getBrandStyles, ds } from '../../../lib/design-system';
 import KontentEditable from '../../../components/KontentEditable';
 import ExpandablePrivacyNotice from '../../../components/ExpandablePrivacyNotice';
-import LandingPageLogo from '../../../components/LandingPageLogo';
+import LandingPageHeader from '../../../components/LandingPageHeader';
 import BannerImage from '../../../components/BannerImage';
-import Image from 'next/image';
 
 interface LandingPageProps {
   params: Promise<{
@@ -27,6 +26,16 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
   return (
     <div style={{ ...landingPageStyles.page, ...brandStyles.page, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <LandingPageHeader
+        title={page.title}
+        logoUrl={page.logoUrl}
+        logoItemId={page.logoItemId}
+        brandPartnerDetailsItemId={page.brandPartnerDetailsItemId}
+        brandKey={page.brandKey}
+        phoneNumber={page.contactPhone}
+        portalLoginUrl={page.portalLoginUrl}
+      />
+
       <main
         className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8"
         style={{ ...landingPageStyles.layout, flex: 1 }}
@@ -39,12 +48,6 @@ export default async function LandingPage({ params }: LandingPageProps) {
               style={{ ...landingPageStyles.card, ...brandStyles.card, gap: ds.spacing.lg }}
               data-kontent-item-id={pageItemId}
             >
-              <LandingPageLogo
-                logoUrl={page.logoUrl}
-                title={page.title}
-                logoItemId={page.logoItemId}
-              />
-
               {page.bannerUrl && (
                 <div className="text-center mb-4 sm:mb-6">
                   <BannerImage

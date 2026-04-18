@@ -5,6 +5,8 @@ interface LandingPageLogoProps {
   title: string;
   logoItemId?: string;
   elementCodename?: string;
+  align?: 'left' | 'center';
+  compact?: boolean;
 }
 
 export default function LandingPageLogo({
@@ -12,6 +14,8 @@ export default function LandingPageLogo({
   title,
   logoItemId,
   elementCodename = 'brand_partner_logo',
+  align = 'center',
+  compact = false,
 }: LandingPageLogoProps) {
   if (!logoUrl) {
     return null;
@@ -28,9 +32,9 @@ export default function LandingPageLogo({
     <div
       {...wrapperAttributes}
       style={{
-        marginBottom: designTokens.spacing['3xl'],
+        marginBottom: compact ? 0 : designTokens.spacing['3xl'],
         display: 'flex',
-        justifyContent: 'center',
+        justifyContent: align === 'left' ? 'flex-start' : 'center',
         alignItems: 'center',
         width: '100%',
       }}
