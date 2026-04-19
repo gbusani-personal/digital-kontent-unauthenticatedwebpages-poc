@@ -89,7 +89,7 @@ export default function LandingPageHeader({
                 fontSize: ds.typography.size.lg,
                 textDecoration: 'none',
               }}
-              aria-label="Login"
+              aria-label="Portal Login"
               data-kontent-item-id={brandPartnerDetailsItemId}
               data-kontent-element-codename="brand_partner_csp_url"
             >
@@ -115,7 +115,7 @@ export default function LandingPageHeader({
                   strokeWidth="2"
                 />
               </svg>
-              <span className="whitespace-nowrap">Login</span>
+              <span className="whitespace-nowrap">Portal Login</span>
             </a>
           )}
         </div>
