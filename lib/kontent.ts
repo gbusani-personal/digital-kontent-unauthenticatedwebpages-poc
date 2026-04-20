@@ -520,6 +520,7 @@ export async function getHomePageContent(): Promise<HomePageContent | null> {
     }
 
     const item = response.data.items[0];
+      const privacyCollectionNoticeHtml = getSectionHtml(item.elements.privacy_collection_notice);
 
     // Map Kontent.ai fields to our interface
     // Adjust these field names based on your Kontent.ai content model
@@ -878,7 +879,6 @@ async function getBrandPartnerHeaderInfo(collection?: string): Promise<{ phone?:
 
 export async function getLandingPageBySlug(slug: string): Promise<LandingPageContent | null> {
   const normalizedSlug = slug.replace(/^\/+/, '');
-  console.log('[getLandingPageBySlug] Loading page with slug:', normalizedSlug);
   const client = getKontentClient();
 
   try {
@@ -891,16 +891,10 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
 
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
-      console.log('[getLandingPageBySlug] Found landing page item:', item.system?.codename);
-      
       const mergedStructuredContent = getMergedContentStructureHtml(item.elements);
-      console.log('[getLandingPageBySlug] Merged structured content length:', mergedStructuredContent.length);
-      
       const contentSectionHtml = getSectionHtml(item.elements.content_section) || mergedStructuredContent;
-      console.log('[getLandingPageBySlug] Content section HTML length:', contentSectionHtml.length);
-      
       const formsSectionHtml = getSectionHtml(item.elements.forms_section) || getSectionHtml(item.elements.form_section);
-      console.log('[getLandingPageBySlug] Forms section HTML length:', formsSectionHtml.length);
+      const privacyCollectionNoticeHtml = getSectionHtml(item.elements.privacy_collection_notice);
       
       const collection = item.system?.collection;
       const brandLogo = await getBrandPartnerLogo(collection);
@@ -924,7 +918,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
         bannerUrl: getAssetUrl(item.elements.banner),
         contentSection: contentSectionHtml,
         formsSection: formsSectionHtml,
-        privacyCollectionNotice: item.elements.privacy_collection_notice?.value || '',
+        privacyCollectionNotice: privacyCollectionNoticeHtml,
         mrecTiles: getLinkedMRECTiles(item.elements.mrec_tiles),
         faqs: getLinkedFAQs(item.elements.faq_s),
       };
@@ -955,6 +949,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
     const mergedStructuredContent = getMergedContentStructureHtml(found.elements);
     const contentSectionHtml = getSectionHtml(found.elements.content_section) || mergedStructuredContent;
     const formsSectionHtml = getSectionHtml(found.elements.forms_section) || getSectionHtml(found.elements.form_section);
+    const privacyCollectionNoticeHtml = getSectionHtml(found.elements.privacy_collection_notice);
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,
@@ -971,7 +966,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       bannerUrl: getAssetUrl(found.elements.banner),
       contentSection: contentSectionHtml,
       formsSection: formsSectionHtml,
-      privacyCollectionNotice: found.elements.privacy_collection_notice?.value || '',
+      privacyCollectionNotice: privacyCollectionNoticeHtml,
       mrecTiles: getLinkedMRECTiles(found.elements.mrec_tiles),
       faqs: getLinkedFAQs(found.elements.faq_s),
     };
