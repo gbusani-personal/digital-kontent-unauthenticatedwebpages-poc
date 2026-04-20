@@ -227,6 +227,81 @@ const getLinkedFAQs = (element: any): FAQContent[] => {
     .filter((faq: FAQContent | null): faq is FAQContent => !!faq && !!faq.question && !!faq.answer);
 };
 
+const getContentBlockBodies = (element: any): string[] => {
+  if (!element) {
+    return [];
+  }
+
+  const fromLinkedItems = (Array.isArray(element.linkedItems) ? element.linkedItems : [])
+    .map((linked: any) => linked?.elements?.body?.value)
+    .filter((value: unknown): value is string => typeof value === 'string' && value.trim().length > 0);
+
+  if (fromLinkedItems.length > 0) {
+    return fromLinkedItems;
+  }
+
+  const values = Array.isArray(element.value) ? element.value : [element.value];
+
+  const resolveItem = (entry: any): any => {
+    if (!entry) {
+      return null;
+    }
+
+    if (entry.elements) {
+      return entry;
+    }
+
+    if (entry.item) {
+      return resolveItem(entry.item);
+    }
+
+    if (entry.value && Array.isArray(entry.value) && entry.value.length > 0) {
+      return resolveItem(entry.value[0]);
+    }
+
+    return null;
+  };
+
+  return values
+    .map((entry: any) => {
+      const linked = resolveItem(entry);
+      return linked?.elements?.body?.value;
+    })
+    .filter((value: unknown): value is string => typeof value === 'string' && value.trim().length > 0);
+};
+
+const getSectionHtml = (element: any): string => {
+  if (!element) {
+    return '';
+  }
+
+  if (typeof element.value === 'string') {
+    return element.value;
+  }
+
+  const contentBlockBodies = getContentBlockBodies(element);
+  if (contentBlockBodies.length > 0) {
+    return contentBlockBodies.join('');
+  }
+
+  return '';
+};
+
+const getMergedContentStructureHtml = (elements: any): string => {
+  if (!elements) {
+    return '';
+  }
+
+  return [
+    getSectionHtml(elements.content_structure),
+    getSectionHtml(elements.content_blocks),
+    getSectionHtml(elements.sections),
+    getSectionHtml(elements.page_sections),
+  ]
+    .filter((value) => value.trim().length > 0)
+    .join('');
+};
+
 const brandCollectionMappings: Record<string, string> = {
   'bupa': 'BUPA',
   'bupa pet insurance': 'BUPA',
@@ -658,7 +733,9 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
 
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
-      const formsValue = item.elements.forms_section?.value || '';
+      const mergedStructuredContent = getMergedContentStructureHtml(item.elements);
+      const contentSectionHtml = getSectionHtml(item.elements.content_section) || mergedStructuredContent;
+      const formsSectionHtml = getSectionHtml(item.elements.forms_section) || getSectionHtml(item.elements.form_section);
       const collection = item.system?.collection;
       const brandLogo = await getBrandPartnerLogo(collection);
       const brandDisclaimer = await getBrandDisclaimer(collection);
@@ -678,8 +755,8 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
         portalLoginUrl: brandHeaderInfo?.portalLoginUrl,
         brandKey,
         bannerUrl: getAssetUrl(item.elements.banner),
-        contentSection: item.elements.content_section?.value || '',
-        formsSection: formsValue,
+        contentSection: contentSectionHtml,
+        formsSection: formsSectionHtml,
         privacyCollectionNotice: item.elements.privacy_collection_notice?.value || '',
         mrecTiles: getLinkedMRECTiles(item.elements.mrec_tiles),
         faqs: getLinkedFAQs(item.elements.faq_s),
@@ -708,6 +785,9 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
     const brandDisclaimer = await getBrandDisclaimer(collection);
     const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
     const brandKey = deriveBrandKey(collection);
+    const mergedStructuredContent = getMergedContentStructureHtml(found.elements);
+    const contentSectionHtml = getSectionHtml(found.elements.content_section) || mergedStructuredContent;
+    const formsSectionHtml = getSectionHtml(found.elements.forms_section) || getSectionHtml(found.elements.form_section);
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,
@@ -722,8 +802,8 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       portalLoginUrl: brandHeaderInfo?.portalLoginUrl,
       brandKey,
       bannerUrl: getAssetUrl(found.elements.banner),
-      contentSection: found.elements.content_section?.value || '',
-      formsSection: found.elements.forms_section?.value || found.elements.form_section?.value || '',
+      contentSection: contentSectionHtml,
+      formsSection: formsSectionHtml,
       privacyCollectionNotice: found.elements.privacy_collection_notice?.value || '',
       mrecTiles: getLinkedMRECTiles(found.elements.mrec_tiles),
       faqs: getLinkedFAQs(found.elements.faq_s),
@@ -777,6 +857,8 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
       const brandLogo = await getBrandPartnerLogo(collection);
       const brandKey = deriveBrandKey(collection);
       const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
+      const mergedStructuredContent = getMergedContentStructureHtml(item.elements);
+      const contentSectionHtml = getSectionHtml(item.elements.content_section) || mergedStructuredContent;
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,
@@ -785,7 +867,7 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
         logoUrl: brandLogo?.url,
         logoItemId: brandLogo?.itemId,
         bannerUrl: getAssetUrl(item.elements.banner),
-        contentSection: item.elements.content_section?.value || '',
+        contentSection: contentSectionHtml,
         contactPhone: brandHeaderInfo?.phone,
         portalLoginUrl: brandHeaderInfo?.portalLoginUrl,
         brandKey,
@@ -812,6 +894,8 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
     const brandLogo = await getBrandPartnerLogo(collection);
     const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
     const brandKey = deriveBrandKey(collection);
+    const mergedStructuredContent = getMergedContentStructureHtml(found.elements);
+    const contentSectionHtml = getSectionHtml(found.elements.content_section) || mergedStructuredContent;
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,
@@ -820,7 +904,7 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
       logoUrl: brandLogo?.url,
       logoItemId: brandLogo?.itemId,
       bannerUrl: getAssetUrl(found.elements.banner),
-      contentSection: found.elements.content_section?.value || '',
+      contentSection: contentSectionHtml,
       contactPhone: brandHeaderInfo?.phone,
       portalLoginUrl: brandHeaderInfo?.portalLoginUrl,
       brandKey,
