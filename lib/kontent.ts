@@ -281,15 +281,37 @@ const getContentBlockRichText = (linked: any): string | undefined => {
   return undefined;
 };
 
-const getContentBlockBodies = (element: any): string[] => {
+interface ContentBlockEntry {
+  id?: string;
+  codename?: string;
+  html: string;
+}
+
+const getContentBlockEntries = (element: any): ContentBlockEntry[] => {
   if (!element) {
     return [];
   }
 
+  const toEntry = (linked: any): ContentBlockEntry | undefined => {
+    if (!isContentBlockLinkedItem(linked)) {
+      return undefined;
+    }
+
+    const html = getContentBlockRichText(linked);
+    if (!html || html.trim().length === 0) {
+      return undefined;
+    }
+
+    return {
+      id: linked?.system?.id,
+      codename: linked?.system?.codename,
+      html,
+    };
+  };
+
   const fromLinkedItems = (Array.isArray(element.linkedItems) ? element.linkedItems : [])
-    .filter((linked: any) => isContentBlockLinkedItem(linked))
-    .map((linked: any) => getContentBlockRichText(linked))
-    .filter((value: unknown): value is string => typeof value === 'string' && value.trim().length > 0);
+    .map((linked: any) => toEntry(linked))
+    .filter((entry: ContentBlockEntry | undefined): entry is ContentBlockEntry => Boolean(entry));
 
   if (fromLinkedItems.length > 0) {
     return fromLinkedItems;
@@ -318,15 +340,62 @@ const getContentBlockBodies = (element: any): string[] => {
   };
 
   return values
-    .map((entry: any) => {
-      const linked = resolveItem(entry);
-      if (!isContentBlockLinkedItem(linked)) {
-        return undefined;
-      }
+    .map((entry: any) => toEntry(resolveItem(entry)))
+    .filter((entry: ContentBlockEntry | undefined): entry is ContentBlockEntry => Boolean(entry));
+};
 
-      return getContentBlockRichText(linked);
+const getContentBlockBodies = (element: any): string[] => {
+  return getContentBlockEntries(element).map((entry) => entry.html);
+};
+
+const mergeRichTextWithContentBlocks = (rawHtml: string, entries: ContentBlockEntry[]): string => {
+  if (entries.length === 0) {
+    return rawHtml;
+  }
+
+  const injectedById = new Set<string>();
+  const injectedByCodename = new Set<string>();
+
+  const replacedHtml = rawHtml.replace(/<object\b[^>]*>\s*<\/object>/gi, (objectTag: string) => {
+    const codenameMatch = objectTag.match(/data-codename="([^"]+)"/i);
+    const idMatch = objectTag.match(/data-id="([^"]+)"/i);
+
+    const matchedEntry = entries.find((entry) => {
+      const codenameMatches = codenameMatch && entry.codename
+        ? entry.codename.toLowerCase() === codenameMatch[1].toLowerCase()
+        : false;
+
+      const idMatches = idMatch && entry.id
+        ? entry.id.toLowerCase() === idMatch[1].toLowerCase()
+        : false;
+
+      return codenameMatches || idMatches;
+    });
+
+    if (!matchedEntry) {
+      return objectTag;
+    }
+
+    if (matchedEntry.id) {
+      injectedById.add(matchedEntry.id.toLowerCase());
+    }
+    if (matchedEntry.codename) {
+      injectedByCodename.add(matchedEntry.codename.toLowerCase());
+    }
+
+    return matchedEntry.html;
+  });
+
+  const missingBodies = entries
+    .filter((entry) => {
+      const idPresent = entry.id ? injectedById.has(entry.id.toLowerCase()) : false;
+      const codenamePresent = entry.codename ? injectedByCodename.has(entry.codename.toLowerCase()) : false;
+      return !idPresent && !codenamePresent;
     })
-    .filter((value: unknown): value is string => typeof value === 'string' && value.trim().length > 0);
+    .map((entry) => entry.html)
+    .filter((html) => !replacedHtml.includes(html));
+
+  return [replacedHtml, ...missingBodies].filter((part) => part.trim().length > 0).join('');
 };
 
 const getContentBlockBodiesFromAnyElement = (elements: Record<string, any>): string[] => {
@@ -358,16 +427,14 @@ const getSectionHtml = (element: any): string => {
     return '';
   }
 
-  if (typeof element.value === 'string') {
-    return element.value;
+  const rawHtml = typeof element.value === 'string' ? element.value : '';
+  const contentBlockEntries = getContentBlockEntries(element);
+
+  if (contentBlockEntries.length === 0) {
+    return rawHtml;
   }
 
-  const contentBlockBodies = getContentBlockBodies(element);
-  if (contentBlockBodies.length > 0) {
-    return contentBlockBodies.join('');
-  }
-
-  return '';
+  return mergeRichTextWithContentBlocks(rawHtml, contentBlockEntries);
 };
 
 const getMergedContentStructureHtml = (elements: any): string => {
