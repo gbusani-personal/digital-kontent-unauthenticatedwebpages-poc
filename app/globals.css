@@ -104,18 +104,18 @@
 }
 
 .rich-text-content table {
-  @apply w-full min-w-full border-collapse mb-4 text-sm;
+  @apply w-full min-w-full border-collapse mb-4 text-slate-700;
   display: block;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
 .rich-text-content th {
-  @apply bg-slate-100 px-4 py-2 text-left font-semibold align-top text-sm;
+  @apply bg-slate-100 px-4 py-2 text-left font-semibold align-top text-base leading-relaxed;
 }
 
 .rich-text-content td {
-  @apply px-4 py-2 align-top text-sm;
+  @apply px-4 py-2 align-top text-base leading-relaxed;
 }
 
 .rich-text-content tr {
