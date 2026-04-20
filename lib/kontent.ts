@@ -227,13 +227,68 @@ const getLinkedFAQs = (element: any): FAQContent[] => {
     .filter((faq: FAQContent | null): faq is FAQContent => !!faq && !!faq.question && !!faq.answer);
 };
 
+const isContentBlockLinkedItem = (linked: any): boolean => {
+  const typeCodename =
+    linked?.system?.type ||
+    linked?.system?.type?.codename ||
+    linked?.system?.typeCodename ||
+    linked?.system?.contentType?.codename ||
+    linked?.system?.content_type?.codename ||
+    linked?.type;
+
+  if (typeof typeCodename === 'string' && typeCodename.toLowerCase() === 'content_block') {
+    return true;
+  }
+
+  if (typeof linked?.system?.codename === 'string' && /content[_-]?block/i.test(linked.system.codename)) {
+    return true;
+  }
+
+  return Boolean(linked?.elements?.body || linked?.elements?.content || linked?.elements?.rich_text);
+};
+
+const getContentBlockRichText = (linked: any): string | undefined => {
+  const elements = linked?.elements;
+  if (!elements || typeof elements !== 'object') {
+    return undefined;
+  }
+
+  const preferredKeys = ['body', 'content', 'rich_text_content', 'rich_text', 'main_content', 'text'];
+
+  for (const key of preferredKeys) {
+    const value = elements[key]?.value;
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value;
+    }
+  }
+
+  // Prefer fields that look like HTML-rich text output from Kontent.
+  for (const element of Object.values(elements) as Array<any>) {
+    const value = element?.value;
+    if (typeof value === 'string' && value.trim().length > 0 && /<[^>]+>/.test(value)) {
+      return value;
+    }
+  }
+
+  // Last fallback: first non-empty string field.
+  for (const element of Object.values(elements) as Array<any>) {
+    const value = element?.value;
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value;
+    }
+  }
+
+  return undefined;
+};
+
 const getContentBlockBodies = (element: any): string[] => {
   if (!element) {
     return [];
   }
 
   const fromLinkedItems = (Array.isArray(element.linkedItems) ? element.linkedItems : [])
-    .map((linked: any) => linked?.elements?.body?.value)
+    .filter((linked: any) => isContentBlockLinkedItem(linked))
+    .map((linked: any) => getContentBlockRichText(linked))
     .filter((value: unknown): value is string => typeof value === 'string' && value.trim().length > 0);
 
   if (fromLinkedItems.length > 0) {
@@ -265,9 +320,37 @@ const getContentBlockBodies = (element: any): string[] => {
   return values
     .map((entry: any) => {
       const linked = resolveItem(entry);
-      return linked?.elements?.body?.value;
+      if (!isContentBlockLinkedItem(linked)) {
+        return undefined;
+      }
+
+      return getContentBlockRichText(linked);
     })
     .filter((value: unknown): value is string => typeof value === 'string' && value.trim().length > 0);
+};
+
+const getContentBlockBodiesFromAnyElement = (elements: Record<string, any>): string[] => {
+  if (!elements || typeof elements !== 'object') {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const results: string[] = [];
+
+  for (const element of Object.values(elements)) {
+    const bodies = getContentBlockBodies(element);
+    for (const body of bodies) {
+      const normalized = body.trim();
+      if (!normalized || seen.has(normalized)) {
+        continue;
+      }
+
+      seen.add(normalized);
+      results.push(body);
+    }
+  }
+
+  return results;
 };
 
 const getSectionHtml = (element: any): string => {
@@ -292,14 +375,21 @@ const getMergedContentStructureHtml = (elements: any): string => {
     return '';
   }
 
-  return [
+  const prioritized = [
     getSectionHtml(elements.content_structure),
     getSectionHtml(elements.content_blocks),
     getSectionHtml(elements.sections),
     getSectionHtml(elements.page_sections),
-  ]
-    .filter((value) => value.trim().length > 0)
-    .join('');
+  ].filter((value) => value.trim().length > 0);
+
+  const fromAnyElement = getContentBlockBodiesFromAnyElement(elements);
+  for (const body of fromAnyElement) {
+    if (!prioritized.some((value) => value.trim() === body.trim())) {
+      prioritized.push(body);
+    }
+  }
+
+  return prioritized.join('');
 };
 
 const brandCollectionMappings: Record<string, string> = {
@@ -721,6 +811,7 @@ async function getBrandPartnerHeaderInfo(collection?: string): Promise<{ phone?:
 
 export async function getLandingPageBySlug(slug: string): Promise<LandingPageContent | null> {
   const normalizedSlug = slug.replace(/^\/+/, '');
+  console.log('[getLandingPageBySlug] Loading page with slug:', normalizedSlug);
   const client = getKontentClient();
 
   try {
@@ -733,14 +824,23 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
 
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
+      console.log('[getLandingPageBySlug] Found landing page item:', item.system?.codename);
+      
       const mergedStructuredContent = getMergedContentStructureHtml(item.elements);
+      console.log('[getLandingPageBySlug] Merged structured content length:', mergedStructuredContent.length);
+      
       const contentSectionHtml = getSectionHtml(item.elements.content_section) || mergedStructuredContent;
+      console.log('[getLandingPageBySlug] Content section HTML length:', contentSectionHtml.length);
+      
       const formsSectionHtml = getSectionHtml(item.elements.forms_section) || getSectionHtml(item.elements.form_section);
+      console.log('[getLandingPageBySlug] Forms section HTML length:', formsSectionHtml.length);
+      
       const collection = item.system?.collection;
       const brandLogo = await getBrandPartnerLogo(collection);
       const brandDisclaimer = await getBrandDisclaimer(collection);
       const brandKey = deriveBrandKey(collection);
       const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
+      
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,

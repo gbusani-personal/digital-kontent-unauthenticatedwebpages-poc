@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getFAQPageBySlug, getMRECTiles, getFAQsBySlug } from '../../../lib/kontent';
 import KontentEditable from '../../../components/KontentEditable';
+import ContentBlockRenderer from '../../../components/ContentBlockRenderer';
 import LandingPageLogo from '../../../components/LandingPageLogo';
 import { landingPageStyles } from '../../../lib/design-system';
 import BannerImage from '../../../components/BannerImage';
@@ -54,12 +55,12 @@ export default async function FAQPage({ params }: FAQPageProps) {
               </div>
 
               {page.contentSection && (
-                <KontentEditable
+                <ContentBlockRenderer
+                  html={page.contentSection}
                   itemId={pageItemId}
                   elementCodename="content_section"
                   tag="div"
                   className="mb-8 rich-text-content"
-                  html={page.contentSection}
                 />
               )}
 

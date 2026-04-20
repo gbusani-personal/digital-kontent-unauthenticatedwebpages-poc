@@ -2,6 +2,7 @@
 import { getLandingPageBySlug } from '../../../lib/kontent';
 import { landingPageStyles, getBrandStyles, ds } from '../../../lib/design-system';
 import KontentEditable from '../../../components/KontentEditable';
+import ContentBlockRenderer from '../../../components/ContentBlockRenderer';
 import ExpandablePrivacyNotice from '../../../components/ExpandablePrivacyNotice';
 import LandingPageHeader from '../../../components/LandingPageHeader';
 import BannerImage from '../../../components/BannerImage';
@@ -77,23 +78,23 @@ export default async function LandingPage({ params }: LandingPageProps) {
               )}
 
               {page.contentSection && (
-                <KontentEditable
+                <ContentBlockRenderer
+                  html={page.contentSection}
                   itemId={pageItemId}
                   elementCodename="content_section"
                   tag="div"
                   className="rich-text-content"
-                  html={page.contentSection}
                   style={{ ...landingPageStyles.bodyText, ...brandStyles.bodyText }}
                 />
               )}
 
               {page.formsSection && (
-                <KontentEditable
+                <ContentBlockRenderer
+                  html={page.formsSection}
                   itemId={pageItemId}
                   elementCodename="forms_section"
                   tag="div"
                   className="rich-text-content"
-                  html={page.formsSection}
                   style={{ ...landingPageStyles.bodyText, ...brandStyles.bodyText }}
                 />
               )}
