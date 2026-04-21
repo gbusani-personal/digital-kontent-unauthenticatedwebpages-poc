@@ -75,6 +75,131 @@ export interface LandingPageContent {
   portalLoginUrl?: string;
 }
 
+const PLACEHOLDER_PATTERN = /\{\{\s*([^{}]+?)\s*\}\}/g;
+const EMAIL_VALUE_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
+const URL_VALUE_PATTERN = /^(https?:\/\/|www\.)[^\s]+$/i;
+const BARE_DOMAIN_PATTERN = /^[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s]*)?$/i;
+
+type BrandPartnerDetails = Record<string, unknown>;
+
+const normalizePlaceholderKey = (value: string): string =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, '');
+
+const escapeHtml = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+const toHyperlinkValue = (value: string): string => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  if (EMAIL_VALUE_PATTERN.test(trimmed)) {
+    const safeText = escapeHtml(trimmed);
+    const safeHref = escapeHtml(`mailto:${trimmed}`);
+    return `<a href="${safeHref}">${safeText}</a>`;
+  }
+
+  if (URL_VALUE_PATTERN.test(trimmed) || BARE_DOMAIN_PATTERN.test(trimmed)) {
+    const href = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    const safeText = escapeHtml(trimmed);
+    const safeHref = escapeHtml(href);
+    return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer">${safeText}</a>`;
+  }
+
+  return value;
+};
+
+interface PlaceholderReplacementOptions {
+  linkify?: boolean;
+}
+
+const stringifyPlaceholderValue = (value: unknown): string => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    const parts = value
+      .map((entry) => stringifyPlaceholderValue(entry))
+      .filter((entry) => entry.trim().length > 0);
+    return parts.join(', ');
+  }
+
+  if (typeof value === 'object') {
+    const objectValue = value as Record<string, unknown>;
+
+    if (typeof objectValue.url === 'string') {
+      return objectValue.url;
+    }
+
+    if (typeof objectValue.value === 'string') {
+      return objectValue.value;
+    }
+
+    if (typeof objectValue.codename === 'string') {
+      return objectValue.codename;
+    }
+  }
+
+  return '';
+};
+
+export const replaceContentPlaceholders = (
+  content: string | null | undefined,
+  brandPartnerDetails?: BrandPartnerDetails | null,
+  options: PlaceholderReplacementOptions = {}
+): string => {
+  if (typeof content !== 'string' || content.length === 0) {
+    return '';
+  }
+
+  if (!brandPartnerDetails || typeof brandPartnerDetails !== 'object') {
+    return content;
+  }
+
+  const normalizedDetailsLookup = new Map<string, unknown>();
+  for (const [key, value] of Object.entries(brandPartnerDetails)) {
+    normalizedDetailsLookup.set(normalizePlaceholderKey(key), value);
+  }
+
+  return content.replace(PLACEHOLDER_PATTERN, (placeholder: string, rawElementName: string) => {
+    const elementName = rawElementName?.trim();
+    if (!elementName) {
+      return placeholder;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(brandPartnerDetails, elementName)) {
+      const resolvedValue = stringifyPlaceholderValue(brandPartnerDetails[elementName]);
+      return options.linkify ? toHyperlinkValue(resolvedValue) : resolvedValue;
+    }
+
+    const normalizedElementName = normalizePlaceholderKey(elementName);
+    if (!normalizedDetailsLookup.has(normalizedElementName)) {
+      return placeholder;
+    }
+
+    const resolvedValue = stringifyPlaceholderValue(normalizedDetailsLookup.get(normalizedElementName));
+    return options.linkify ? toHyperlinkValue(resolvedValue) : resolvedValue;
+  });
+};
+
 const getAssetUrl = (element: any): string | undefined => {
   if (!element?.value) {
     return undefined;
@@ -701,6 +826,28 @@ const getElementStringValue = (element: any): string | undefined => {
   return undefined;
 };
 
+const getElementPlaceholderValue = (element: any): unknown => {
+  if (!element) {
+    return undefined;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(element, 'value')) {
+    return element.value;
+  }
+
+  return undefined;
+};
+
+const extractBrandPartnerDetails = (elements: Record<string, any>): BrandPartnerDetails => {
+  const details: BrandPartnerDetails = {};
+
+  for (const [key, element] of Object.entries(elements || {})) {
+    details[key] = getElementPlaceholderValue(element);
+  }
+
+  return details;
+};
+
 const extractFirstLinkedItem = (element: any): any | undefined => {
   if (!element) {
     return undefined;
@@ -841,7 +988,7 @@ const extractHeaderInfoFromElements = (elements: Record<string, any>) => {
   };
 };
 
-async function getBrandPartnerHeaderInfo(collection?: string): Promise<{ phone?: string; portalLoginUrl?: string; itemId?: string } | undefined> {
+async function getBrandPartnerHeaderInfo(collection?: string): Promise<{ phone?: string; portalLoginUrl?: string; itemId?: string; details: BrandPartnerDetails } | undefined> {
   try {
     const client = getKontentClient();
 
@@ -904,6 +1051,10 @@ async function getBrandPartnerHeaderInfo(collection?: string): Promise<{ phone?:
       phone: detailsInfo.phone || rootInfo.phone,
       portalLoginUrl: detailsInfo.portalLoginUrl || rootInfo.portalLoginUrl,
       itemId: detailsItem?.system?.id,
+      details: {
+        ...extractBrandPartnerDetails(rootElements),
+        ...extractBrandPartnerDetails(detailsItem?.elements || {}),
+      },
     };
   } catch (error) {
     console.error('Error fetching Brand Partner Details from Kontent.ai:', error);
@@ -935,26 +1086,31 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       const brandDisclaimer = await getBrandDisclaimer(collection);
       const brandKey = deriveBrandKey(collection);
       const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
+      const detailsLookup = brandHeaderInfo?.details;
       
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,
-        title: item.elements.title?.value || 'Landing Page',
+        title: replaceContentPlaceholders(item.elements.title?.value || 'Landing Page', detailsLookup),
         urlSlug: item.elements.url_slug?.value || normalizedSlug,
         logoUrl: brandLogo?.url,
         logoItemId: brandLogo?.itemId,
         brandPartnerItemId: brandLogo?.itemId,
         brandPartnerDetailsItemId: brandHeaderInfo?.itemId,
-        brandDisclaimer: brandDisclaimer?.text,
-        contactPhone: brandHeaderInfo?.phone,
-        portalLoginUrl: brandHeaderInfo?.portalLoginUrl,
+        brandDisclaimer: replaceContentPlaceholders(brandDisclaimer?.text, detailsLookup, { linkify: true }),
+        contactPhone: replaceContentPlaceholders(brandHeaderInfo?.phone, detailsLookup),
+        portalLoginUrl: replaceContentPlaceholders(brandHeaderInfo?.portalLoginUrl, detailsLookup),
         brandKey,
         bannerUrl: getAssetUrl(item.elements.banner),
-        contentSection: contentSectionHtml,
-        formsSection: formsSectionHtml,
-        privacyCollectionNotice: privacyCollectionNoticeHtml,
+        contentSection: replaceContentPlaceholders(contentSectionHtml, detailsLookup, { linkify: true }),
+        formsSection: replaceContentPlaceholders(formsSectionHtml, detailsLookup, { linkify: true }),
+        privacyCollectionNotice: replaceContentPlaceholders(privacyCollectionNoticeHtml, detailsLookup, { linkify: true }),
         mrecTiles: getLinkedMRECTiles(item.elements.mrec_tiles),
-        faqs: getLinkedFAQs(item.elements.faq_s),
+        faqs: getLinkedFAQs(item.elements.faq_s).map((faq) => ({
+          ...faq,
+          question: replaceContentPlaceholders(faq.question, detailsLookup),
+          answer: replaceContentPlaceholders(faq.answer, detailsLookup, { linkify: true }),
+        })),
       };
     }
 
@@ -980,6 +1136,7 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
     const brandDisclaimer = await getBrandDisclaimer(collection);
     const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
     const brandKey = deriveBrandKey(collection);
+    const detailsLookup = brandHeaderInfo?.details;
     const mergedStructuredContent = getMergedContentStructureHtml(found.elements);
     const contentSectionHtml = getSectionHtml(found.elements.content_section) || mergedStructuredContent;
     const formsSectionHtml = getSectionHtml(found.elements.forms_section) || getSectionHtml(found.elements.form_section);
@@ -987,22 +1144,26 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,
-      title: found.elements.title?.value || 'Landing Page',
+      title: replaceContentPlaceholders(found.elements.title?.value || 'Landing Page', detailsLookup),
       urlSlug: found.elements.url_slug?.value || normalizedSlug,
       logoUrl: brandLogo?.url,
       logoItemId: brandLogo?.itemId,
       brandPartnerItemId: brandLogo?.itemId,
       brandPartnerDetailsItemId: brandHeaderInfo?.itemId,
-      brandDisclaimer: brandDisclaimer?.text,
-      contactPhone: brandHeaderInfo?.phone,
-      portalLoginUrl: brandHeaderInfo?.portalLoginUrl,
+      brandDisclaimer: replaceContentPlaceholders(brandDisclaimer?.text, detailsLookup, { linkify: true }),
+      contactPhone: replaceContentPlaceholders(brandHeaderInfo?.phone, detailsLookup),
+      portalLoginUrl: replaceContentPlaceholders(brandHeaderInfo?.portalLoginUrl, detailsLookup),
       brandKey,
       bannerUrl: getAssetUrl(found.elements.banner),
-      contentSection: contentSectionHtml,
-      formsSection: formsSectionHtml,
-      privacyCollectionNotice: privacyCollectionNoticeHtml,
+      contentSection: replaceContentPlaceholders(contentSectionHtml, detailsLookup, { linkify: true }),
+      formsSection: replaceContentPlaceholders(formsSectionHtml, detailsLookup, { linkify: true }),
+      privacyCollectionNotice: replaceContentPlaceholders(privacyCollectionNoticeHtml, detailsLookup, { linkify: true }),
       mrecTiles: getLinkedMRECTiles(found.elements.mrec_tiles),
-      faqs: getLinkedFAQs(found.elements.faq_s),
+      faqs: getLinkedFAQs(found.elements.faq_s).map((faq) => ({
+        ...faq,
+        question: replaceContentPlaceholders(faq.question, detailsLookup),
+        answer: replaceContentPlaceholders(faq.answer, detailsLookup, { linkify: true }),
+      })),
     };
   } catch (error) {
     console.error(`Error fetching landing page content for slug ${slug}:`, error);
@@ -1053,19 +1214,20 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
       const brandLogo = await getBrandPartnerLogo(collection);
       const brandKey = deriveBrandKey(collection);
       const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
+      const detailsLookup = brandHeaderInfo?.details;
       const mergedStructuredContent = getMergedContentStructureHtml(item.elements);
       const contentSectionHtml = getSectionHtml(item.elements.content_section) || mergedStructuredContent;
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,
-        title: item.elements.title?.value || 'FAQ Page',
+        title: replaceContentPlaceholders(item.elements.title?.value || 'FAQ Page', detailsLookup),
         urlSlug: item.elements.url_slug?.value || normalizedSlug,
         logoUrl: brandLogo?.url,
         logoItemId: brandLogo?.itemId,
         bannerUrl: getAssetUrl(item.elements.banner),
-        contentSection: contentSectionHtml,
-        contactPhone: brandHeaderInfo?.phone,
-        portalLoginUrl: brandHeaderInfo?.portalLoginUrl,
+        contentSection: replaceContentPlaceholders(contentSectionHtml, detailsLookup, { linkify: true }),
+        contactPhone: replaceContentPlaceholders(brandHeaderInfo?.phone, detailsLookup),
+        portalLoginUrl: replaceContentPlaceholders(brandHeaderInfo?.portalLoginUrl, detailsLookup),
         brandKey,
       };
     }
@@ -1090,19 +1252,20 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
     const brandLogo = await getBrandPartnerLogo(collection);
     const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
     const brandKey = deriveBrandKey(collection);
+    const detailsLookup = brandHeaderInfo?.details;
     const mergedStructuredContent = getMergedContentStructureHtml(found.elements);
     const contentSectionHtml = getSectionHtml(found.elements.content_section) || mergedStructuredContent;
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,
-      title: found.elements.title?.value || 'FAQ Page',
+      title: replaceContentPlaceholders(found.elements.title?.value || 'FAQ Page', detailsLookup),
       urlSlug: found.elements.url_slug?.value || normalizedSlug,
       logoUrl: brandLogo?.url,
       logoItemId: brandLogo?.itemId,
       bannerUrl: getAssetUrl(found.elements.banner),
-      contentSection: contentSectionHtml,
-      contactPhone: brandHeaderInfo?.phone,
-      portalLoginUrl: brandHeaderInfo?.portalLoginUrl,
+      contentSection: replaceContentPlaceholders(contentSectionHtml, detailsLookup, { linkify: true }),
+      contactPhone: replaceContentPlaceholders(brandHeaderInfo?.phone, detailsLookup),
+      portalLoginUrl: replaceContentPlaceholders(brandHeaderInfo?.portalLoginUrl, detailsLookup),
       brandKey,
     };
   } catch (error) {
