@@ -80,6 +80,9 @@ const PLACEHOLDER_PATTERN = /\{\{\s*([^{}]+?)\s*\}\}/g;
 const EMAIL_VALUE_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
 const URL_VALUE_PATTERN = /^(https?:\/\/|www\.)[^\s]+$/i;
 const BARE_DOMAIN_PATTERN = /^[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s]*)?$/i;
+const ANCHOR_TAG_PATTERN = /<a\b([^>]*)>/gi;
+const ATTRIBUTE_TARGET_PATTERN = /target\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/i;
+const ATTRIBUTE_REL_PATTERN = /rel\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/i;
 
 type BrandPartnerDetails = Record<string, unknown>;
 
@@ -97,6 +100,36 @@ const escapeHtml = (value: string): string =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
+const ensureAnchorAttributes = (attributes: string): string => {
+  let updated = attributes.trim();
+
+  if (ATTRIBUTE_TARGET_PATTERN.test(updated)) {
+    updated = updated.replace(ATTRIBUTE_TARGET_PATTERN, 'target="_blank"');
+  } else {
+    updated = `${updated} target="_blank"`.trim();
+  }
+
+  if (ATTRIBUTE_REL_PATTERN.test(updated)) {
+    updated = updated.replace(ATTRIBUTE_REL_PATTERN, (_match, value: string) => {
+      const unquoted = value.replace(/^['"]|['"]$/g, '');
+      const tokens = new Set(unquoted.split(/\s+/).filter(Boolean).map((token) => token.toLowerCase()));
+      tokens.add('noopener');
+      tokens.add('noreferrer');
+      return `rel="${Array.from(tokens).join(' ')}"`;
+    });
+  } else {
+    updated = `${updated} rel="noopener noreferrer"`.trim();
+  }
+
+  return updated;
+};
+
+const forceHyperlinksToOpenInNewWindow = (content: string): string =>
+  content.replace(ANCHOR_TAG_PATTERN, (_match, attributes: string) => {
+    const updatedAttributes = ensureAnchorAttributes(attributes || '');
+    return `<a ${updatedAttributes}>`;
+  });
+
 const toHyperlinkValue = (value: string): string => {
   const trimmed = value.trim();
   if (!trimmed) {
@@ -106,7 +139,7 @@ const toHyperlinkValue = (value: string): string => {
   if (EMAIL_VALUE_PATTERN.test(trimmed)) {
     const safeText = escapeHtml(trimmed);
     const safeHref = escapeHtml(`mailto:${trimmed}`);
-    return `<a href="${safeHref}">${safeText}</a>`;
+    return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer">${safeText}</a>`;
   }
 
   if (URL_VALUE_PATTERN.test(trimmed) || BARE_DOMAIN_PATTERN.test(trimmed)) {
@@ -180,7 +213,7 @@ export const replaceContentPlaceholders = (
     normalizedDetailsLookup.set(normalizePlaceholderKey(key), value);
   }
 
-  return content.replace(PLACEHOLDER_PATTERN, (placeholder: string, rawElementName: string) => {
+  const contentWithReplacements = content.replace(PLACEHOLDER_PATTERN, (placeholder: string, rawElementName: string) => {
     const elementName = rawElementName?.trim();
     if (!elementName) {
       return placeholder;
@@ -199,6 +232,8 @@ export const replaceContentPlaceholders = (
     const resolvedValue = stringifyPlaceholderValue(normalizedDetailsLookup.get(normalizedElementName));
     return options.linkify ? toHyperlinkValue(resolvedValue) : resolvedValue;
   });
+
+  return options.linkify ? forceHyperlinksToOpenInNewWindow(contentWithReplacements) : contentWithReplacements;
 };
 
 const getAssetUrl = (element: any): string | undefined => {

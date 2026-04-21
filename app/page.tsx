@@ -29,10 +29,10 @@ export default async function Home() {
               <h1 className="text-2xl font-bold text-gray-900">SecureLife Insurance</h1>
             </div>
             <nav className="hidden md:flex space-x-8">
-              <a href="#" className="text-gray-700 hover:text-blue-600 transition-colors">Home</a>
-              <a href="#" className="text-gray-700 hover:text-blue-600 transition-colors">About</a>
-              <a href="#" className="text-gray-700 hover:text-blue-600 transition-colors">Services</a>
-              <a href="#" className="text-gray-700 hover:text-blue-600 transition-colors">Contact</a>
+              <a href="#" target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-blue-600 transition-colors">Home</a>
+              <a href="#" target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-blue-600 transition-colors">About</a>
+              <a href="#" target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-blue-600 transition-colors">Services</a>
+              <a href="#" target="_blank" rel="noopener noreferrer" className="text-gray-700 hover:text-blue-600 transition-colors">Contact</a>
             </nav>
           </div>
         </div>

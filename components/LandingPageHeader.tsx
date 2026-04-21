@@ -70,6 +70,8 @@ export default function LandingPageHeader({
           {displayPhone && (
             <a
               href={formatTelHref(displayPhone)}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-md px-4 py-2.5 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               style={{
                 ...landingPageStyles.faqQuestion,
@@ -89,6 +91,8 @@ export default function LandingPageHeader({
           {cmsWebsiteUrl && (
             <a
               href={cmsWebsiteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-md px-4 py-2.5 hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               style={{
                 ...landingPageStyles.faqQuestion,
