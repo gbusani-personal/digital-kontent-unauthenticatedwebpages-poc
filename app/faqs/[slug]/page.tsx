@@ -40,6 +40,8 @@ export default async function FAQPage({ params }: FAQPageProps) {
                   <BannerImage
                     src={page.bannerUrl}
                     alt={`${page.title} banner`}
+                    itemId={pageItemId}
+                    elementCodename="banner"
                   />
                 </div>
               )}
@@ -107,7 +109,11 @@ export default async function FAQPage({ params }: FAQPageProps) {
             <div className="lg:col-span-1">
               <div className="space-y-4">
                 {mrecTiles.map((tile, index) => (
-                  <div key={index} className="rounded-lg bg-white shadow-md border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow aspect-square">
+                  <div
+                    key={index}
+                    className="rounded-lg bg-white shadow-md border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow aspect-square"
+                    {...(tile.itemId ? { 'data-kontent-item-id': tile.itemId, 'data-kontent-element-codename': 'image' } : {})}
+                  >
                     {tile.imageUrl && (
                       <img
                         src={tile.imageUrl}

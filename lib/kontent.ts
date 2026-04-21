@@ -306,6 +306,7 @@ const getLinkedFAQs = (element: any): FAQContent[] => {
   if (linkedItems.length > 0) {
     return linkedItems
       .map((linked: any) => ({
+        itemId: linked?.system?.id,
         question: linked.elements?.question?.value || '',
         answer: linked.elements?.answer?.value || '',
         order: linked.elements?.order?.value || 0,
@@ -345,6 +346,7 @@ const getLinkedFAQs = (element: any): FAQContent[] => {
       }
 
       return {
+        itemId: linked?.system?.id,
         question: linked.elements?.question?.value || '',
         answer: linked.elements?.answer?.value || '',
         order: linked.elements?.order?.value || 0,
