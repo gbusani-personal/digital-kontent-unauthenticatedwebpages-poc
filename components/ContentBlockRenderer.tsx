@@ -71,6 +71,24 @@ export default function ContentBlockRenderer({
 }: ContentBlockRendererProps) {
   const Tag = tag as any;
 
+  const hasMeaningfulHtml = (value: string): boolean => {
+    const normalized = value
+      .replace(/<!--([\s\S]*?)-->/g, '')
+      .replace(/&nbsp;|&#160;/gi, ' ')
+      .replace(/\u00a0/g, ' ')
+      .trim();
+
+    if (!normalized) {
+      return false;
+    }
+
+    if (/<(img|iframe|video|audio|object|embed|svg|table|ul|ol|li|hr|blockquote)\b/i.test(normalized)) {
+      return true;
+    }
+
+    return normalized.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().length > 0;
+  };
+
   // Build data attributes for Kontent.ai edit mode integration
   const dataAttributes = itemId && elementCodename
     ? {
@@ -79,7 +97,7 @@ export default function ContentBlockRenderer({
       }
     : {};
 
-  if (!html || html.trim().length === 0) {
+  if (!html || !hasMeaningfulHtml(html)) {
     return null;
   }
 

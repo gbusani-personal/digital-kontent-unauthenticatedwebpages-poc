@@ -247,6 +247,37 @@ const isContentBlockLinkedItem = (linked: any): boolean => {
   return Boolean(linked?.elements?.body || linked?.elements?.content || linked?.elements?.rich_text);
 };
 
+const hasMeaningfulRichText = (value: string): boolean => {
+  if (!value || typeof value !== 'string') {
+    return false;
+  }
+
+  const normalized = value
+    .replace(/<!--([\s\S]*?)-->/g, '')
+    .replace(/&nbsp;|&#160;/gi, ' ')
+    .replace(/\u00a0/g, ' ')
+    .trim();
+
+  if (!normalized) {
+    return false;
+  }
+
+  if (/<(img|iframe|video|audio|object|embed|svg|table|ul|ol|li|hr|blockquote)\b/i.test(normalized)) {
+    return true;
+  }
+
+  const textOnly = normalized.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  return textOnly.length > 0;
+};
+
+const normalizeRichTextHtml = (value: unknown): string => {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  return hasMeaningfulRichText(value) ? value : '';
+};
+
 const getContentBlockRichText = (linked: any): string | undefined => {
   const elements = linked?.elements;
   if (!elements || typeof elements !== 'object') {
@@ -257,24 +288,27 @@ const getContentBlockRichText = (linked: any): string | undefined => {
 
   for (const key of preferredKeys) {
     const value = elements[key]?.value;
-    if (typeof value === 'string' && value.trim().length > 0) {
-      return value;
+    const normalizedValue = normalizeRichTextHtml(value);
+    if (normalizedValue) {
+      return normalizedValue;
     }
   }
 
   // Prefer fields that look like HTML-rich text output from Kontent.
   for (const element of Object.values(elements) as Array<any>) {
     const value = element?.value;
-    if (typeof value === 'string' && value.trim().length > 0 && /<[^>]+>/.test(value)) {
-      return value;
+    const normalizedValue = normalizeRichTextHtml(value);
+    if (normalizedValue && /<[^>]+>/.test(normalizedValue)) {
+      return normalizedValue;
     }
   }
 
   // Last fallback: first non-empty string field.
   for (const element of Object.values(elements) as Array<any>) {
     const value = element?.value;
-    if (typeof value === 'string' && value.trim().length > 0) {
-      return value;
+    const normalizedValue = normalizeRichTextHtml(value);
+    if (normalizedValue) {
+      return normalizedValue;
     }
   }
 
@@ -427,7 +461,7 @@ const getSectionHtml = (element: any): string => {
     return '';
   }
 
-  const rawHtml = typeof element.value === 'string' ? element.value : '';
+  const rawHtml = normalizeRichTextHtml(element.value);
   const contentBlockEntries = getContentBlockEntries(element);
 
   if (contentBlockEntries.length === 0) {
