@@ -51,6 +51,8 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   <BannerImage
                     src={page.bannerUrl}
                     alt={`${page.title} banner`}
+                    itemId={pageItemId}
+                    elementCodename="banner"
                   />
                 </div>
               )}
@@ -106,6 +108,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                     key={index}
                     className="overflow-hidden hover:shadow-lg transition-shadow"
                     style={{ ...landingPageStyles.tileCard, ...brandStyles.tileCard }}
+                    {...(tile.itemId ? { 'data-kontent-item-id': tile.itemId, 'data-kontent-element-codename': 'image' } : {})}
                   >
                     {tile.imageUrl && (
                       <img
@@ -136,7 +139,14 @@ export default async function LandingPage({ params }: LandingPageProps) {
                             transition: 'color 180ms ease-in-out',
                           }}
                         >
-                          {faq.question}
+                          <KontentEditable
+                            itemId={faq.itemId}
+                            elementCodename="question"
+                            tag="span"
+                            style={landingPageStyles.faqQuestion}
+                          >
+                            {faq.question}
+                          </KontentEditable>
                           <span className="ml-4 inline-block transform transition-transform group-open:rotate-180">
                             ▼
                           </span>

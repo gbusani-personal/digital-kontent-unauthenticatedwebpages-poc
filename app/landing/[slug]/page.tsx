@@ -54,6 +54,8 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   <BannerImage
                     src={page.bannerUrl}
                     alt={`${page.title} banner`}
+                    itemId={pageItemId}
+                    elementCodename="banner"
                   />
                 </div>
               )}
@@ -110,6 +112,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                     key={index}
                     className="overflow-hidden hover:shadow-lg transition-shadow"
                     style={{ ...landingPageStyles.tileCard, ...brandStyles.tileCard }}
+                    {...(tile.itemId ? { 'data-kontent-item-id': tile.itemId, 'data-kontent-element-codename': 'image' } : {})}
                   >
                     {tile.imageUrl && (
                       <img

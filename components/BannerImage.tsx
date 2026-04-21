@@ -8,9 +8,11 @@ interface BannerImageProps {
   alt: string;
   className?: string;
   style?: React.CSSProperties;
+  itemId?: string;
+  elementCodename?: string;
 }
 
-export default function BannerImage({ src, alt, className, style }: BannerImageProps) {
+export default function BannerImage({ src, alt, className, style, itemId, elementCodename = 'banner' }: BannerImageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -23,8 +25,12 @@ export default function BannerImage({ src, alt, className, style }: BannerImageP
     );
   }
 
+  const editAttributes = itemId
+    ? { 'data-kontent-item-id': itemId, 'data-kontent-element-codename': elementCodename }
+    : {};
+
   return (
-    <div className="relative overflow-hidden w-full rounded-lg sm:rounded-xl" style={{ height: '12rem' }}>
+    <div className="relative overflow-hidden w-full rounded-lg sm:rounded-xl" style={{ height: '12rem' }} {...editAttributes}>
       {isLoading && (
         <div
           className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-lg sm:rounded-xl animate-pulse"

@@ -26,6 +26,7 @@ export interface FAQItem {
 }
 
 export interface MRECTile {
+  itemId?: string;
   title: string;
   imageUrl?: string;
   order?: number;
@@ -239,6 +240,7 @@ const getLinkedMRECTiles = (element: any): MRECTile[] => {
       .map((linked: any) => {
         const imageElement = linked.elements?.image;
         return {
+          itemId: linked?.system?.id,
           title:
             linked.elements?.title?.value ||
             linked.elements?.headline?.value ||
@@ -282,6 +284,7 @@ const getLinkedMRECTiles = (element: any): MRECTile[] => {
 
       const imageElement = linked.elements?.image;
       return {
+        itemId: linked?.system?.id,
         title:
           linked.elements?.title?.value ||
           linked.elements?.headline?.value ||
