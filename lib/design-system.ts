@@ -8,7 +8,8 @@ const brandThemeMappings: Record<string, Record<string, any>> = {
   default: {},
   BUPA: {
     page: {
-      background: 'linear-gradient(135deg, #edf4ff 0%, #ffffff 100%)',
+      background: '#edf4ff',
+      backgroundColor: '#edf4ff',
       color: '#102a55',
     },
     card: {
@@ -46,7 +47,8 @@ const brandThemeMappings: Record<string, Record<string, any>> = {
   },
   HCF: {
     page: {
-      background: 'linear-gradient(135deg, #e6f5f1 0%, #ffffff 100%)',
+      background: '#e6f5f1',
+      backgroundColor: '#e6f5f1',
       color: '#003d2d',
     },
     card: {
@@ -90,7 +92,8 @@ export function getBrandStyles(brandKey?: string) {
 
 export const landingPageStyles = {
   page: {
-    background: ds.colors.backgroundGradient,
+    background: ds.colors.background,
+    backgroundColor: ds.colors.background,
     color: ds.colors.textPrimary,
     fontFamily: ds.typography.fontFamily,
     transition: ds.states.transition,

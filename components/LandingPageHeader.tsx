@@ -38,13 +38,13 @@ export default function LandingPageHeader({
   const brandStyles = getBrandStyles(brandKey);
   const displayPhone = phoneNumber?.trim() || '';
   const cmsWebsiteUrl = portalLoginUrl ? normalizeWebsiteUrl(portalLoginUrl) : '';
-  const headerBackground = brandStyles.page?.background ?? landingPageStyles.page.background;
+  const headerBackgroundColor = brandStyles.page?.backgroundColor ?? landingPageStyles.page.backgroundColor;
 
   return (
     <header
       className="sticky top-0 z-40 w-full px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-3 sm:pb-4"
       style={{
-        background: headerBackground,
+        backgroundColor: headerBackgroundColor,
       }}
       aria-label="Landing page header"
     >
