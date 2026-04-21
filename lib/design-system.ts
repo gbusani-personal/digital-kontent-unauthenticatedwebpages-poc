@@ -101,7 +101,7 @@ export const landingPageStyles = {
   layout: {
     paddingLeft: ds.spacing.xl,
     paddingRight: ds.spacing.xl,
-    paddingTop: ds.spacing['4xl'],
+    paddingTop: ds.spacing.xl,
     paddingBottom: ds.spacing['4xl'],
   },
   card: {
