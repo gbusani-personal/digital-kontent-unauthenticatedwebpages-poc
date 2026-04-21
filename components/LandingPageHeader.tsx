@@ -38,9 +38,16 @@ export default function LandingPageHeader({
   const brandStyles = getBrandStyles(brandKey);
   const displayPhone = phoneNumber?.trim() || '';
   const cmsWebsiteUrl = portalLoginUrl ? normalizeWebsiteUrl(portalLoginUrl) : '';
+  const headerBackground = brandStyles.page?.background ?? landingPageStyles.page.background;
 
   return (
-    <header className="w-full px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8" aria-label="Landing page header">
+    <header
+      className="sticky top-0 z-40 w-full px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 lg:pt-8 pb-3 sm:pb-4"
+      style={{
+        background: headerBackground,
+      }}
+      aria-label="Landing page header"
+    >
       <div
         className="max-w-7xl mx-auto flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between"
         style={{
