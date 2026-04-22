@@ -108,14 +108,16 @@
   display: block;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  font-size: inherit;
+  line-height: inherit;
 }
 
 .rich-text-content th {
-  @apply bg-slate-100 px-4 py-2 text-left font-semibold align-top text-base leading-relaxed;
+  @apply bg-slate-100 px-4 py-2 text-left font-semibold align-top leading-relaxed;
 }
 
 .rich-text-content td {
-  @apply px-4 py-2 align-top text-base leading-relaxed;
+  @apply px-4 py-2 align-top leading-relaxed;
 }
 
 .rich-text-content tr {
