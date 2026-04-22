@@ -130,6 +130,58 @@ const forceHyperlinksToOpenInNewWindow = (content: string): string =>
     return `<a ${updatedAttributes}>`;
   });
 
+const normalizeUrlInput = (value: string): string => {
+  let normalized = value.trim();
+
+  // Fix malformed protocol variants such as "http//", "http:/", and "http:example.com".
+  if (/^https?\/\//i.test(normalized)) {
+    normalized = normalized.replace(/^https?(?=\/\/)/i, (match) => `${match}:`);
+  } else if (/^https?:\/(?!\/)/i.test(normalized)) {
+    normalized = normalized.replace(/^https?:\/(?!\/)/i, (match) =>
+      match.toLowerCase().startsWith('https') ? 'https://' : 'http://'
+    );
+  } else if (/^https?:(?!\/\/)/i.test(normalized)) {
+    normalized = normalized.replace(/^https?:(?!\/\/)/i, (match) => `${match}//`);
+  }
+
+  return normalized;
+};
+
+const stripProtocolPrefix = (value: string): string =>
+  value
+    .replace(/^https?:\/\//i, '')
+    .replace(/^https?\/\//i, '');
+
+const hasProtocolPrefixBeforePlaceholder = (content: string, offset: number): boolean => {
+  const context = content.slice(Math.max(0, offset - 32), offset).toLowerCase();
+  return context.endsWith('http://') || context.endsWith('https://');
+};
+
+const toHrefValue = (value: string): string => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  if (EMAIL_VALUE_PATTERN.test(trimmed)) {
+    return `mailto:${trimmed}`;
+  }
+
+  const normalized = normalizeUrlInput(trimmed);
+
+  if (URL_VALUE_PATTERN.test(normalized) || BARE_DOMAIN_PATTERN.test(normalized)) {
+    return /^https?:\/\//i.test(normalized) ? normalized : `https://${normalized}`;
+  }
+
+  return normalized;
+};
+
+const isInsideHtmlTagAtOffset = (html: string, offset: number): boolean => {
+  const lastOpenBracket = html.lastIndexOf('<', offset);
+  const lastCloseBracket = html.lastIndexOf('>', offset);
+  return lastOpenBracket > lastCloseBracket;
+};
+
 const toHyperlinkValue = (value: string): string => {
   const trimmed = value.trim();
   if (!trimmed) {
@@ -213,7 +265,9 @@ export const replaceContentPlaceholders = (
     normalizedDetailsLookup.set(normalizePlaceholderKey(key), value);
   }
 
-  const contentWithReplacements = content.replace(PLACEHOLDER_PATTERN, (placeholder: string, rawElementName: string) => {
+  const contentWithReplacements = content.replace(
+    PLACEHOLDER_PATTERN,
+    (placeholder: string, rawElementName: string, offset: number) => {
     const elementName = rawElementName?.trim();
     if (!elementName) {
       return placeholder;
@@ -221,7 +275,19 @@ export const replaceContentPlaceholders = (
 
     if (Object.prototype.hasOwnProperty.call(brandPartnerDetails, elementName)) {
       const resolvedValue = stringifyPlaceholderValue(brandPartnerDetails[elementName]);
-      return options.linkify ? toHyperlinkValue(resolvedValue) : resolvedValue;
+      if (!options.linkify) {
+        return resolvedValue;
+      }
+
+      if (isInsideHtmlTagAtOffset(content, offset)) {
+        const hrefValue = toHrefValue(resolvedValue);
+        const safeHrefValue = hasProtocolPrefixBeforePlaceholder(content, offset)
+          ? stripProtocolPrefix(hrefValue)
+          : hrefValue;
+        return escapeHtml(safeHrefValue);
+      }
+
+      return toHyperlinkValue(resolvedValue);
     }
 
     const normalizedElementName = normalizePlaceholderKey(elementName);
@@ -230,8 +296,21 @@ export const replaceContentPlaceholders = (
     }
 
     const resolvedValue = stringifyPlaceholderValue(normalizedDetailsLookup.get(normalizedElementName));
-    return options.linkify ? toHyperlinkValue(resolvedValue) : resolvedValue;
-  });
+    if (!options.linkify) {
+      return resolvedValue;
+    }
+
+    if (isInsideHtmlTagAtOffset(content, offset)) {
+      const hrefValue = toHrefValue(resolvedValue);
+      const safeHrefValue = hasProtocolPrefixBeforePlaceholder(content, offset)
+        ? stripProtocolPrefix(hrefValue)
+        : hrefValue;
+      return escapeHtml(safeHrefValue);
+    }
+
+    return toHyperlinkValue(resolvedValue);
+    }
+  );
 
   return options.linkify ? forceHyperlinksToOpenInNewWindow(contentWithReplacements) : contentWithReplacements;
 };
