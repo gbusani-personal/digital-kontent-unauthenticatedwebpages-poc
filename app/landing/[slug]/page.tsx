@@ -107,24 +107,26 @@ export default async function LandingPage({ params }: LandingPageProps) {
           {/* MREC Tiles and FAQ Sidebar */}
           {hasSidebarContent && (
             <div className="grid grid-cols-1 auto-rows-max gap-4 sm:gap-6">
-              <div className="space-y-4">
-                {mrecTiles.map((tile, index) => (
-                  <div
-                    key={index}
-                    className="overflow-hidden hover:shadow-lg transition-shadow"
-                    style={{ ...landingPageStyles.tileCard, ...brandStyles.tileCard }}
-                    {...(tile.itemId ? { 'data-kontent-item-id': tile.itemId, 'data-kontent-element-codename': 'image' } : {})}
-                  >
-                    {tile.imageUrl && (
-                      <img
-                        src={tile.imageUrl}
-                        alt={tile.title}
-                        className="w-full h-full object-contain object-center"
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+              {mrecTiles.length > 0 && (
+                <div className="space-y-4">
+                  {mrecTiles.map((tile, index) => (
+                    <div
+                      key={index}
+                      className="overflow-hidden hover:shadow-lg transition-shadow"
+                      style={{ ...landingPageStyles.tileCard, ...brandStyles.tileCard }}
+                      {...(tile.itemId ? { 'data-kontent-item-id': tile.itemId, 'data-kontent-element-codename': 'image' } : {})}
+                    >
+                      {tile.imageUrl && (
+                        <img
+                          src={tile.imageUrl}
+                          alt={tile.title}
+                          className="w-full h-full object-contain object-center"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {faqs.length > 0 && (
                 <div style={landingPageStyles.faqCard}>
