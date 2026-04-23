@@ -18,6 +18,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
   const page = await getLandingPageBySlug(slug);
   const mrecTiles = page?.mrecTiles ?? [];
   const faqs = page?.faqs ?? [];
+  const hasSidebarContent = mrecTiles.length > 0 || faqs.length > 0;
   const pageItemId = page?.itemId;
   const brandStyles = getBrandStyles(page?.brandKey);
 
@@ -41,9 +42,9 @@ export default async function LandingPage({ params }: LandingPageProps) {
         className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8"
         style={{ ...landingPageStyles.layout, flex: 1 }}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+        <div className={`grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8 ${hasSidebarContent ? 'lg:grid-cols-4' : ''}`}>
           {/* Main Content */}
-          <div className="lg:col-span-3">
+          <div className={hasSidebarContent ? 'lg:col-span-3' : ''}>
             <div
               className="flex flex-col p-4 sm:p-6 lg:p-10 rounded-lg sm:rounded-xl lg:rounded-3xl"
               style={{ ...landingPageStyles.card, ...brandStyles.card, gap: ds.spacing.lg }}
@@ -104,7 +105,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
           </div>
 
           {/* MREC Tiles and FAQ Sidebar */}
-          {(mrecTiles.length > 0 || faqs.length > 0) && (
+          {hasSidebarContent && (
             <div className="grid grid-cols-1 auto-rows-max gap-4 sm:gap-6">
               <div className="space-y-4">
                 {mrecTiles.map((tile, index) => (
