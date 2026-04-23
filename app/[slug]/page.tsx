@@ -54,6 +54,9 @@ export default async function LandingPage({ params }: LandingPageProps) {
   const isMakingAClaimPage = isMakingAClaimLandingPage(slug, page?.title);
   const trackClaimUrl = page?.portalLoginUrl ? normalizeWebsiteUrl(page.portalLoginUrl) : '';
   const showTrackClaimCta = isMakingAClaimPage && trackClaimUrl.length > 0;
+  const bodyContentStyle = showTrackClaimCta
+    ? { ...landingPageStyles.bodyText, ...brandStyles.bodyText }
+    : { ...landingPageStyles.bodyText, ...brandStyles.bodyText, marginBottom: 0 };
 
   if (!page) {
     return notFound();
@@ -116,7 +119,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   elementCodename="content_section"
                   tag="div"
                   className="rich-text-content"
-                  style={{ ...landingPageStyles.bodyText, ...brandStyles.bodyText }}
+                  style={bodyContentStyle}
                 />
               )}
 
@@ -127,7 +130,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   elementCodename="forms_section"
                   tag="div"
                   className="rich-text-content"
-                  style={{ ...landingPageStyles.bodyText, ...brandStyles.bodyText }}
+                  style={bodyContentStyle}
                 />
               )}
 
