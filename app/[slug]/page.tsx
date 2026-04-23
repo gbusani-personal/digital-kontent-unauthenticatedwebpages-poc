@@ -13,6 +13,36 @@ interface LandingPageProps {
   }>;
 }
 
+const isMakingAClaimLandingPage = (slug: string, title?: string): boolean =>
+  /making[-_ ]?a[-_ ]?claim/i.test(slug) || /making[-_ ]?a[-_ ]?claim/i.test(title ?? '');
+
+const normalizeWebsiteUrl = (url: string): string => {
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (/^https?\/\//i.test(trimmed)) {
+    return trimmed.replace(/^https?(?=\/\/)/i, (match) => `${match}:`);
+  }
+
+  if (/^https?:\/(?!\/)/i.test(trimmed)) {
+    return trimmed.replace(/^https?:\/(?!\/)/i, (match) =>
+      match.toLowerCase().startsWith('https') ? 'https://' : 'http://'
+    );
+  }
+
+  if (/^https?:(?!\/\/)/i.test(trimmed)) {
+    return trimmed.replace(/^https?:(?!\/\/)/i, (match) => `${match}//`);
+  }
+
+  return `https://${trimmed}`;
+};
+
 export default async function LandingPage({ params }: LandingPageProps) {
   const { slug } = await params;
   const page = await getLandingPageBySlug(slug);
@@ -21,6 +51,9 @@ export default async function LandingPage({ params }: LandingPageProps) {
   const hasSidebarContent = mrecTiles.length > 0 || faqs.length > 0;
   const pageItemId = page?.itemId;
   const brandStyles = getBrandStyles(page?.brandKey);
+  const isMakingAClaimPage = isMakingAClaimLandingPage(slug, page?.title);
+  const trackClaimUrl = page?.portalLoginUrl ? normalizeWebsiteUrl(page.portalLoginUrl) : '';
+  const showTrackClaimCta = isMakingAClaimPage && trackClaimUrl.length > 0;
 
   if (!page) {
     return notFound();
@@ -96,6 +129,25 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   className="rich-text-content"
                   style={{ ...landingPageStyles.bodyText, ...brandStyles.bodyText }}
                 />
+              )}
+
+              {showTrackClaimCta && (
+                <div className="text-center mt-2 sm:mt-4">
+                  <a
+                    href={trackClaimUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center rounded-md px-6 py-3 font-semibold hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                    style={{
+                      backgroundColor: brandStyles.contentHeading?.color ?? '#0f172a',
+                      color: '#ffffff',
+                    }}
+                    data-kontent-item-id={page.brandPartnerDetailsItemId}
+                    data-kontent-element-codename="brand_partner_csp_url"
+                  >
+                    Track Your Claim
+                  </a>
+                </div>
               )}
             </div>
           </div>
