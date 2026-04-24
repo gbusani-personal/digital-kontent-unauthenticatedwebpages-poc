@@ -39,6 +39,7 @@ export default function LandingPageHeader({
   const displayPhone = phoneNumber?.trim() || '';
   const cmsWebsiteUrl = portalLoginUrl ? normalizeWebsiteUrl(portalLoginUrl) : '';
   const headerBackgroundColor = brandStyles.page?.backgroundColor ?? landingPageStyles.page.backgroundColor;
+  const topSectionTextColor = brandStyles.contentHeading?.color ?? landingPageStyles.contentHeading.color;
 
   return (
     <header
@@ -78,6 +79,7 @@ export default function LandingPageHeader({
                 ...brandStyles.faqQuestion,
                 fontSize: ds.typography.size.lg,
                 textDecoration: 'none',
+                color: topSectionTextColor,
               }}
               aria-label={`Call ${displayPhone}`}
               data-kontent-item-id={brandPartnerDetailsItemId}
@@ -99,6 +101,7 @@ export default function LandingPageHeader({
                 ...brandStyles.faqQuestion,
                 fontSize: ds.typography.size.lg,
                 textDecoration: 'none',
+                color: topSectionTextColor,
               }}
               aria-label="Portal Login"
               data-kontent-item-id={brandPartnerDetailsItemId}

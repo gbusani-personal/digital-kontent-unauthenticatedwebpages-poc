@@ -30,27 +30,36 @@
 
 /* Rich text content styling */
 .rich-text-content h1 {
-  @apply text-3xl font-bold text-slate-900 mt-8 mb-4 first:mt-0;
+  @apply text-3xl font-bold mt-8 mb-4 first:mt-0;
 }
 
 .rich-text-content h2 {
-  @apply text-2xl font-semibold text-slate-900 mt-6 mb-3;
+  @apply text-2xl font-semibold mt-6 mb-3;
 }
 
 .rich-text-content h3 {
-  @apply text-xl font-semibold text-slate-900 mt-5 mb-2;
+  @apply text-xl font-semibold mt-5 mb-2;
 }
 
 .rich-text-content h4 {
-  @apply text-lg font-semibold text-slate-900 mt-4 mb-2;
+  @apply text-lg font-semibold mt-4 mb-2;
 }
 
 .rich-text-content h5 {
-  @apply text-base font-semibold text-slate-900 mt-3 mb-2;
+  @apply text-base font-semibold mt-3 mb-2;
 }
 
 .rich-text-content h6 {
-  @apply text-sm font-semibold text-slate-900 mt-3 mb-2;
+  @apply text-sm font-semibold mt-3 mb-2;
+}
+
+.rich-text-content h1,
+.rich-text-content h2,
+.rich-text-content h3,
+.rich-text-content h4,
+.rich-text-content h5,
+.rich-text-content h6 {
+  color: var(--content-heading-color, #0f172a);
 }
 
 .rich-text-content p {
@@ -74,7 +83,13 @@
 }
 
 .rich-text-content a {
-  @apply text-blue-600 hover:text-blue-800 underline;
+  @apply underline;
+  color: var(--content-heading-color, #0f172a);
+}
+
+.rich-text-content a:hover,
+.rich-text-content a:visited {
+  color: var(--content-heading-color, #0f172a);
 }
 
 .rich-text-content strong,

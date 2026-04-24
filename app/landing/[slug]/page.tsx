@@ -63,7 +63,16 @@ export default async function LandingPage({ params }: LandingPageProps) {
   }
 
   return (
-    <div style={{ ...landingPageStyles.page, ...brandStyles.page, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div
+      style={{
+        ...landingPageStyles.page,
+        ...brandStyles.page,
+        '--content-heading-color': brandStyles.contentHeading?.color ?? landingPageStyles.contentHeading.color,
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <LandingPageHeader
         title={page.title}
         logoUrl={page.logoUrl}
