@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Montserrat } from "next/font/google";
+import { Geist, Geist_Mono, Montserrat, Noto_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import KontentSmartLinkInit from "../components/KontentSmartLinkInit";
@@ -17,6 +17,13 @@ const geistMono = Geist_Mono({
 // BUPA brand font
 const montserrat = Montserrat({
   variable: "--font-bupa",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+// PIA brand font
+const notoSans = Noto_Sans({
+  variable: "--font-pia",
   subsets: ["latin"],
   display: "swap",
 });
@@ -54,7 +61,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${whitney.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${notoSans.variable} ${whitney.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <KontentSmartLinkInit />

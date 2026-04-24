@@ -86,6 +86,46 @@ const brandThemeMappings: Record<string, Record<string, any>> = {
       borderColor: '#cce8e0',
     },
   },
+  PIA: {
+    page: {
+      background: '#fff7ed',
+      backgroundColor: '#fff7ed',
+      color: '#7c2d12',
+      fontFamily: 'var(--font-pia)',
+    },
+    card: {
+      borderColor: '#fed7aa',
+      backgroundColor: '#ffffff',
+    },
+    contentHeading: {
+      color: '#c2410c',
+    },
+    sectionTitle: {
+      color: '#c2410c',
+    },
+    bodyText: {
+      color: '#334155',
+    },
+    faqCard: {
+      backgroundColor: '#fffaf3',
+      borderColor: '#fde6c8',
+    },
+    faqItem: {
+      backgroundColor: '#fff3e2',
+      borderColor: '#fed7aa',
+    },
+    faqQuestion: {
+      color: '#9a3412',
+    },
+    tileCard: {
+      backgroundColor: '#fffaf3',
+      borderColor: '#fed7aa',
+    },
+    brandDisclaimer: {
+      color: '#475569',
+      borderColor: '#fde6c8',
+    },
+  },
 };
 
 export function getBrandStyles(brandKey?: string) {
