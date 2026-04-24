@@ -4,7 +4,24 @@ export type DesignTokens = typeof designTokens;
 
 export const ds = designTokens;
 
-const brandThemeMappings: Record<string, Record<string, any>> = {
+type StyleObject = Record<string, string | number>;
+
+type BrandStyles = {
+  fontFamily?: string;
+  page?: StyleObject;
+  card?: StyleObject;
+  contentHeading?: StyleObject;
+  sectionTitle?: StyleObject;
+  bodyText?: StyleObject;
+  faqCard?: StyleObject;
+  faqItem?: StyleObject;
+  faqQuestion?: StyleObject;
+  tileCard?: StyleObject;
+  brandDisclaimer?: StyleObject;
+  [key: string]: StyleObject | string | undefined;
+};
+
+const brandThemeMappings: Record<string, BrandStyles> = {
   default: {},
   BUPA: {
     page: {
@@ -98,10 +115,10 @@ const brandThemeMappings: Record<string, Record<string, any>> = {
       backgroundColor: '#ffffff',
     },
     contentHeading: {
-      color: '#c2410c',
+      color: '#ba272d',
     },
     sectionTitle: {
-      color: '#c2410c',
+      color: '#ba272d',
     },
     bodyText: {
       color: '#334155',
@@ -128,8 +145,87 @@ const brandThemeMappings: Record<string, Record<string, any>> = {
   },
 };
 
+const brandFontVariables: Record<string, string> = {
+  BUPA: 'var(--font-bupa)',
+  HCF: 'var(--font-hcf)',
+  PIA: 'var(--font-pia)',
+};
+
+const brandKeyAliases: Record<string, string> = {
+  BUPA: 'BUPA',
+  HCF: 'HCF',
+  PIA: 'PIA',
+  'PET INSURANCE AUSTRALIA': 'PIA',
+  PETINSURANCEAUSTRALIA: 'PIA',
+  PETINSURANCEAUSTRALIACOLLECTION: 'PIA',
+};
+
+function resolveBrandKey(brandKey?: string): string {
+  const rawKey = (brandKey ?? 'default').trim();
+  if (!rawKey) {
+    return 'default';
+  }
+
+  const upperKey = rawKey.toUpperCase();
+  if (brandKeyAliases[upperKey]) {
+    return brandKeyAliases[upperKey];
+  }
+
+  const normalizedKey = rawKey.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return brandKeyAliases[normalizedKey] ?? rawKey;
+}
+
+function normalizeBrandStyles(brandKey: string, brandStyles: BrandStyles): BrandStyles {
+  const headingColor =
+    brandStyles?.contentHeading?.color ??
+    brandStyles?.sectionTitle?.color ??
+    brandStyles?.faqQuestion?.color ??
+    ds.colors.textPrimary;
+
+  const bodyColor =
+    brandStyles?.bodyText?.color ??
+    brandStyles?.page?.color ??
+    ds.colors.textSecondary;
+
+  const resolvedFontFamily =
+    brandStyles?.page?.fontFamily ??
+    brandStyles?.fontFamily ??
+    brandFontVariables[brandKey] ??
+    undefined;
+
+  return {
+    ...brandStyles,
+    page: {
+      ...(brandStyles?.page ?? {}),
+      ...(resolvedFontFamily ? { fontFamily: resolvedFontFamily } : {}),
+    },
+    contentHeading: {
+      color: headingColor,
+      ...(brandStyles?.contentHeading ?? {}),
+    },
+    sectionTitle: {
+      color: headingColor,
+      ...(brandStyles?.sectionTitle ?? {}),
+    },
+    faqQuestion: {
+      color: headingColor,
+      ...(brandStyles?.faqQuestion ?? {}),
+    },
+    bodyText: {
+      color: bodyColor,
+      ...(brandStyles?.bodyText ?? {}),
+    },
+    brandDisclaimer: {
+      color: bodyColor,
+      ...(brandStyles?.brandDisclaimer ?? {}),
+    },
+  };
+}
+
 export function getBrandStyles(brandKey?: string) {
-  return brandThemeMappings[brandKey ?? 'default'] ?? brandThemeMappings.default;
+  const resolvedBrandKey = resolveBrandKey(brandKey);
+  const baseBrandStyles = brandThemeMappings[resolvedBrandKey] ?? brandThemeMappings.default;
+  return normalizeBrandStyles(resolvedBrandKey, baseBrandStyles);
 }
 
 export const landingPageStyles = {

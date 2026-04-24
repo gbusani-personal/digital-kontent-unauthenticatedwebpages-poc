@@ -3,7 +3,7 @@ import { getFAQPageBySlug, getMRECTiles, getFAQsBySlug } from '../../../lib/kont
 import KontentEditable from '../../../components/KontentEditable';
 import ContentBlockRenderer from '../../../components/ContentBlockRenderer';
 import LandingPageLogo from '../../../components/LandingPageLogo';
-import { landingPageStyles } from '../../../lib/design-system';
+import { landingPageStyles, getBrandStyles, ds } from '../../../lib/design-system';
 import BannerImage from '../../../components/BannerImage';
 
 interface FAQPageProps {
@@ -18,18 +18,31 @@ export default async function FAQPage({ params }: FAQPageProps) {
   const mrecTiles = await getMRECTiles();
   const faqs = await getFAQsBySlug(slug);
   const pageItemId = page?.itemId;
+  const brandStyles = getBrandStyles(page?.brandKey);
 
   if (!page) {
     return notFound();
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-blue-100 py-16">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div
+      style={{
+        ...landingPageStyles.page,
+        ...brandStyles.page,
+        '--content-heading-color': brandStyles.contentHeading?.color ?? landingPageStyles.contentHeading.color,
+        minHeight: '100vh',
+      }}
+      className="py-16"
+    >
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={landingPageStyles.layout}>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <div className="rounded-3xl bg-white shadow-xl border border-slate-200 p-10" data-kontent-item-id={pageItemId}>
+            <div
+              className="rounded-3xl p-10"
+              style={{ ...landingPageStyles.card, ...brandStyles.card }}
+              data-kontent-item-id={pageItemId}
+            >
               <LandingPageLogo
                 logoUrl={page.logoUrl}
                 title={page.title}
@@ -50,7 +63,7 @@ export default async function FAQPage({ params }: FAQPageProps) {
                   itemId={pageItemId}
                   elementCodename="title"
                   tag="h1"
-                  className="text-4xl sm:text-5xl font-bold text-slate-900"
+                  style={{ ...landingPageStyles.contentHeading, ...brandStyles.contentHeading }}
                 >
                   {page.title}
                 </KontentEditable>
@@ -63,25 +76,32 @@ export default async function FAQPage({ params }: FAQPageProps) {
                   elementCodename="content_section"
                   tag="div"
                   className="mb-8 rich-text-content"
+                  style={{ ...landingPageStyles.bodyText, ...brandStyles.bodyText }}
                 />
               )}
 
               {/* FAQs Section */}
               {faqs.length > 0 && (
                 <div className="mt-12">
-                  <h2 className="text-2xl font-bold text-slate-900 mb-6">Frequently Asked Questions</h2>
+                  <h2 className="mb-6" style={{ ...landingPageStyles.sectionTitle, ...brandStyles.sectionTitle }}>
+                    Frequently Asked Questions
+                  </h2>
                   <div className="space-y-4">
                     {faqs.map((faq, index) => (
                       <details
                         key={index}
-                        className="rounded-lg border border-slate-200 bg-slate-50 p-4 group hover:border-blue-300 transition-colors"
+                        className="rounded-lg p-4 group transition-colors"
+                        style={{ ...landingPageStyles.faqItem, ...brandStyles.faqItem }}
                       >
-                        <summary className="flex cursor-pointer items-center justify-between font-semibold text-slate-900 hover:text-blue-600 transition-colors">
+                        <summary
+                          className="flex cursor-pointer items-center justify-between transition-colors"
+                          style={{ ...landingPageStyles.faqQuestion, ...brandStyles.faqQuestion }}
+                        >
                       <KontentEditable
                         itemId={faq.itemId}
                         elementCodename="question"
                         tag="span"
-                        className="text-slate-900"
+                        style={{ ...landingPageStyles.faqQuestion, ...brandStyles.faqQuestion }}
                       >
                         {faq.question}
                       </KontentEditable>
@@ -94,6 +114,7 @@ export default async function FAQPage({ params }: FAQPageProps) {
                       elementCodename="answer"
                       tag="div"
                       className="mt-4 rich-text-content"
+                      style={{ ...landingPageStyles.faqAnswer, ...brandStyles.bodyText }}
                       html={faq.answer}
                     />
                       </details>
@@ -111,7 +132,8 @@ export default async function FAQPage({ params }: FAQPageProps) {
                 {mrecTiles.map((tile, index) => (
                   <div
                     key={index}
-                    className="rounded-lg bg-white shadow-md border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow aspect-square"
+                    className="overflow-hidden hover:shadow-lg transition-shadow aspect-square"
+                    style={{ ...landingPageStyles.tileCard, ...brandStyles.tileCard }}
                     {...(tile.itemId ? { 'data-kontent-item-id': tile.itemId, 'data-kontent-element-codename': 'image' } : {})}
                   >
                     {tile.imageUrl && (

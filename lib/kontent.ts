@@ -750,6 +750,12 @@ const brandCollectionMappings: Record<string, string> = {
   'hcf-pet-insurance': 'HCF',
   'hcf_pet_insurance_collection': 'HCF',
   'hcf-pet-insurance-collection': 'HCF',
+  'pia': 'PIA',
+  'pet insurance australia': 'PIA',
+  'pet_insurance_australia': 'PIA',
+  'pet-insurance-australia': 'PIA',
+  'pet_insurance_australia_collection': 'PIA',
+  'pet-insurance-australia-collection': 'PIA',
 };
 
 const normalizeCollectionName = (collectionName: string): string =>
@@ -776,6 +782,7 @@ function deriveBrandKey(collection?: string): string | undefined {
   return getBrandKeyFromCollection(collection) ??
     (normalizeCollectionName(collection).includes('bupa') ? 'BUPA' : 
      normalizeCollectionName(collection).includes('hcf') ? 'HCF' : 
+     normalizeCollectionName(collection).includes('pet insurance australia') || normalizeCollectionName(collection).includes('pia') ? 'PIA' :
      undefined);
 }
 
