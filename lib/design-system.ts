@@ -11,6 +11,7 @@ const brandThemeMappings: Record<string, Record<string, any>> = {
       background: '#edf4ff',
       backgroundColor: '#edf4ff',
       color: '#102a55',
+      fontFamily: 'var(--font-bupa)',
     },
     card: {
       borderColor: '#bfd4ff',
@@ -50,6 +51,7 @@ const brandThemeMappings: Record<string, Record<string, any>> = {
       background: '#e6f5f1',
       backgroundColor: '#e6f5f1',
       color: '#003d2d',
+      fontFamily: 'var(--font-hcf)',
     },
     card: {
       borderColor: '#a8d5ca',
