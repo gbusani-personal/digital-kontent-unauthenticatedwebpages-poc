@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import type { CSSProperties } from 'react';
 import { getFAQPageBySlug, getMRECTiles, getFAQsBySlug } from '../../../lib/kontent';
 import KontentEditable from '../../../components/KontentEditable';
 import ContentBlockRenderer from '../../../components/ContentBlockRenderer';
@@ -19,21 +20,19 @@ export default async function FAQPage({ params }: FAQPageProps) {
   const faqs = await getFAQsBySlug(slug);
   const pageItemId = page?.itemId;
   const brandStyles = getBrandStyles(page?.brandKey);
+  const pageStyle: CSSProperties & Record<'--content-heading-color', string> = {
+    ...landingPageStyles.page,
+    ...brandStyles.page,
+    '--content-heading-color': String(brandStyles.contentHeading?.color ?? landingPageStyles.contentHeading.color),
+    minHeight: '100vh',
+  };
 
   if (!page) {
     return notFound();
   }
 
   return (
-    <div
-      style={{
-        ...landingPageStyles.page,
-        ...brandStyles.page,
-        '--content-heading-color': brandStyles.contentHeading?.color ?? landingPageStyles.contentHeading.color,
-        minHeight: '100vh',
-      }}
-      className="py-16"
-    >
+    <div style={pageStyle} className="py-16">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={landingPageStyles.layout}>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}

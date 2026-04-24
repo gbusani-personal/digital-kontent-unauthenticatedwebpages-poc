@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import type { CSSProperties } from 'react';
 import { getLandingPageBySlug } from '../../lib/kontent';
 import { landingPageStyles, getBrandStyles, ds } from '../../lib/design-system';
 import KontentEditable from '../../components/KontentEditable';
@@ -57,22 +58,21 @@ export default async function LandingPage({ params }: LandingPageProps) {
   const bodyContentStyle = showTrackClaimCta
     ? { ...landingPageStyles.bodyText, ...brandStyles.bodyText }
     : { ...landingPageStyles.bodyText, ...brandStyles.bodyText, marginBottom: 0 };
+  const pageStyle: CSSProperties & Record<'--content-heading-color', string> = {
+    ...landingPageStyles.page,
+    ...brandStyles.page,
+    '--content-heading-color': String(brandStyles.contentHeading?.color ?? landingPageStyles.contentHeading.color),
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+  };
 
   if (!page) {
     return notFound();
   }
 
   return (
-    <div
-      style={{
-        ...landingPageStyles.page,
-        ...brandStyles.page,
-        '--content-heading-color': brandStyles.contentHeading?.color ?? landingPageStyles.contentHeading.color,
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
+    <div style={pageStyle}>
       <LandingPageHeader
         title={page.title}
         logoUrl={page.logoUrl}
