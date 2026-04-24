@@ -58,6 +58,8 @@ export default async function LandingPage({ params }: LandingPageProps) {
   const bodyContentStyle = showTrackClaimCta
     ? { ...landingPageStyles.bodyText, ...brandStyles.bodyText }
     : { ...landingPageStyles.bodyText, ...brandStyles.bodyText, marginBottom: 0 };
+  const ctaBackgroundColor =
+    typeof brandStyles.contentHeading?.color === 'string' ? brandStyles.contentHeading.color : '#0f172a';
   const pageStyle: CSSProperties & Record<'--content-heading-color', string> = {
     ...landingPageStyles.page,
     ...brandStyles.page,
@@ -151,7 +153,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center rounded-md px-6 py-3 font-semibold hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                     style={{
-                      backgroundColor: brandStyles.contentHeading?.color ?? '#0f172a',
+                      backgroundColor: ctaBackgroundColor,
                       color: '#ffffff',
                     }}
                     data-kontent-item-id={page.brandPartnerDetailsItemId}

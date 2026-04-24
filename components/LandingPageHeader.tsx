@@ -38,8 +38,14 @@ export default function LandingPageHeader({
   const brandStyles = getBrandStyles(brandKey);
   const displayPhone = phoneNumber?.trim() || '';
   const cmsWebsiteUrl = portalLoginUrl ? normalizeWebsiteUrl(portalLoginUrl) : '';
-  const headerBackgroundColor = brandStyles.page?.backgroundColor ?? landingPageStyles.page.backgroundColor;
-  const topSectionTextColor = brandStyles.contentHeading?.color ?? landingPageStyles.contentHeading.color;
+  const headerBackgroundColor =
+    typeof brandStyles.page?.backgroundColor === 'string'
+      ? brandStyles.page.backgroundColor
+      : String(landingPageStyles.page.backgroundColor);
+  const topSectionTextColor =
+    typeof brandStyles.contentHeading?.color === 'string'
+      ? brandStyles.contentHeading.color
+      : String(landingPageStyles.contentHeading.color);
 
   return (
     <header
