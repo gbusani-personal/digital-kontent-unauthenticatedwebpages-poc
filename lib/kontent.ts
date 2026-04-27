@@ -76,7 +76,7 @@ export interface LandingPageContent {
   portalLoginUrl?: string;
 }
 
-const PLACEHOLDER_PATTERN = /\{\{\s*([^{}]+?)\s*\}\}/g;
+const PLACEHOLDER_PATTERN = /\[\[\s*([^\[\]]+?)\s*\]\]/g;
 const EMAIL_VALUE_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
 const URL_VALUE_PATTERN = /^(https?:\/\/|www\.)[^\s]+$/i;
 const BARE_DOMAIN_PATTERN = /^[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s]*)?$/i;
