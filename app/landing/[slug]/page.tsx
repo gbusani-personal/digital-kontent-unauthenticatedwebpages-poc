@@ -85,7 +85,10 @@ export default async function LandingPage({ params }: LandingPageProps) {
         portalLoginUrl={page.portalLoginUrl}
       />
 
-      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8" style={{ ...landingPageStyles.layout, flex: 1 }}>
+      <main
+        className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8"
+        style={{ ...landingPageStyles.layout, paddingTop: 0, flex: 1 }}
+      >
         <div className={`grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8 ${hasSidebarContent ? 'lg:grid-cols-4' : ''}`}>
           {/* Main Content */}
           <div className={hasSidebarContent ? 'lg:col-span-3' : ''}>
