@@ -87,7 +87,13 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
       <main
         className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8"
-        style={{ ...landingPageStyles.layout, flex: 1 }}
+        style={{
+          ...landingPageStyles.layout,
+          paddingLeft: 0,
+          paddingRight: 0,
+          paddingTop: ds.spacing.md,
+          flex: 1,
+        }}
       >
         <div className={`grid grid-cols-1 gap-4 sm:gap-6 lg:gap-8 ${hasSidebarContent ? 'lg:grid-cols-4' : ''}`}>
           {/* Main Content */}
