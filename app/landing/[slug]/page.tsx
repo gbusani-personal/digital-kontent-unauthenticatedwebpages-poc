@@ -105,12 +105,12 @@ export default async function LandingPage({ params }: LandingPageProps) {
                 </div>
               )}
 
-              <div className="text-center mb-4 sm:mb-6">
+              <div className="text-center">
                 <KontentEditable
                   itemId={pageItemId}
                   elementCodename="title"
                   tag="h1"
-                  style={{ ...landingPageStyles.contentHeading, ...brandStyles.contentHeading }}
+                  style={{ ...landingPageStyles.contentHeading, ...brandStyles.contentHeading, marginBottom: 0 }}
                 >
                   {page.title}
                 </KontentEditable>
