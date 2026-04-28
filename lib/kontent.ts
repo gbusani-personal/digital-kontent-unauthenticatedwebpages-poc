@@ -472,15 +472,13 @@ const getLinkedFAQs = (element: any): FAQContent[] => {
 };
 
 const isContentBlockLinkedItem = (linked: any): boolean => {
-  const typeCodename =
-    linked?.system?.type ||
-    linked?.system?.type?.codename ||
-    linked?.system?.typeCodename ||
-    linked?.system?.contentType?.codename ||
-    linked?.system?.content_type?.codename ||
-    linked?.type;
+  const typeCodename = getLinkedItemTypeCodename(linked);
 
-  if (typeof typeCodename === 'string' && typeCodename.toLowerCase() === 'content_block') {
+  if (typeCodename === 'accordion_content_block') {
+    return false;
+  }
+
+  if (typeCodename === 'content_block') {
     return true;
   }
 
@@ -565,12 +563,87 @@ interface ContentBlockEntry {
   html: string;
 }
 
-const getContentBlockEntries = (element: any): ContentBlockEntry[] => {
+const ACCORDION_MARKER_PREFIX = 'KONTENT_ACCORDION:';
+
+const getLinkedItemTypeCodename = (linked: any): string | undefined => {
+  const rawType =
+    linked?.system?.type ||
+    linked?.system?.type?.codename ||
+    linked?.system?.typeCodename ||
+    linked?.system?.contentType?.codename ||
+    linked?.system?.content_type?.codename ||
+    linked?.type;
+
+  if (typeof rawType === 'string' && rawType.trim().length > 0) {
+    return rawType.trim().toLowerCase();
+  }
+
+  return undefined;
+};
+
+const isAccordionContentBlockLinkedItem = (linked: any): boolean => {
+  return getLinkedItemTypeCodename(linked) === 'accordion_content_block';
+};
+
+const getAccordionHeading = (linked: any): string => {
+  const headingValue = linked?.elements?.heading?.value;
+  if (typeof headingValue === 'string') {
+    return headingValue.trim();
+  }
+
+  return '';
+};
+
+const toAccordionMarker = (id: string | undefined, codename: string | undefined, heading: string, contentHtml: string): string => {
+  const payload = encodeURIComponent(
+    JSON.stringify({
+      id: id || '',
+      codename: codename || '',
+      heading,
+      contentHtml,
+    })
+  );
+
+  return `<!--${ACCORDION_MARKER_PREFIX}${payload}-->`;
+};
+
+const getContentBlockEntries = (element: any, detailsLookup?: BrandPartnerDetails | null): ContentBlockEntry[] => {
   if (!element) {
     return [];
   }
 
+  /**
+   * Central resolver for linked rich-text components.
+   * Add future component types here (by codename) so all rich-text composition
+   * continues to flow through the same merge/injection pipeline.
+   */
   const toEntry = (linked: any): ContentBlockEntry | undefined => {
+    if (isAccordionContentBlockLinkedItem(linked)) {
+      const heading = getAccordionHeading(linked);
+      const contentHtml = getContentBlockRichText(linked);
+      const resolvedHeading = replaceContentPlaceholders(heading, detailsLookup);
+      const resolvedContentHtml = replaceContentPlaceholders(contentHtml, detailsLookup, { linkify: true });
+
+      // Graceful fallback: if heading/content is incomplete, keep rendering plain content when possible.
+      if (!resolvedContentHtml || resolvedContentHtml.trim().length === 0) {
+        return undefined;
+      }
+
+      if (resolvedHeading.length === 0) {
+        return {
+          id: linked?.system?.id,
+          codename: linked?.system?.codename,
+          html: resolvedContentHtml,
+        };
+      }
+
+      return {
+        id: linked?.system?.id,
+        codename: linked?.system?.codename,
+        html: toAccordionMarker(linked?.system?.id, linked?.system?.codename, resolvedHeading, resolvedContentHtml),
+      };
+    }
+
     if (!isContentBlockLinkedItem(linked)) {
       return undefined;
     }
@@ -622,8 +695,8 @@ const getContentBlockEntries = (element: any): ContentBlockEntry[] => {
     .filter((entry: ContentBlockEntry | undefined): entry is ContentBlockEntry => Boolean(entry));
 };
 
-const getContentBlockBodies = (element: any): string[] => {
-  return getContentBlockEntries(element).map((entry) => entry.html);
+const getContentBlockBodies = (element: any, detailsLookup?: BrandPartnerDetails | null): string[] => {
+  return getContentBlockEntries(element, detailsLookup).map((entry) => entry.html);
 };
 
 const mergeRichTextWithContentBlocks = (rawHtml: string, entries: ContentBlockEntry[]): string => {
@@ -676,7 +749,7 @@ const mergeRichTextWithContentBlocks = (rawHtml: string, entries: ContentBlockEn
   return [replacedHtml, ...missingBodies].filter((part) => part.trim().length > 0).join('');
 };
 
-const getContentBlockBodiesFromAnyElement = (elements: Record<string, any>): string[] => {
+const getContentBlockBodiesFromAnyElement = (elements: Record<string, any>, detailsLookup?: BrandPartnerDetails | null): string[] => {
   if (!elements || typeof elements !== 'object') {
     return [];
   }
@@ -685,7 +758,7 @@ const getContentBlockBodiesFromAnyElement = (elements: Record<string, any>): str
   const results: string[] = [];
 
   for (const element of Object.values(elements)) {
-    const bodies = getContentBlockBodies(element);
+    const bodies = getContentBlockBodies(element, detailsLookup);
     for (const body of bodies) {
       const normalized = body.trim();
       if (!normalized || seen.has(normalized)) {
@@ -700,13 +773,13 @@ const getContentBlockBodiesFromAnyElement = (elements: Record<string, any>): str
   return results;
 };
 
-const getSectionHtml = (element: any): string => {
+const getSectionHtml = (element: any, detailsLookup?: BrandPartnerDetails | null): string => {
   if (!element) {
     return '';
   }
 
   const rawHtml = normalizeRichTextHtml(element.value);
-  const contentBlockEntries = getContentBlockEntries(element);
+  const contentBlockEntries = getContentBlockEntries(element, detailsLookup);
 
   if (contentBlockEntries.length === 0) {
     return rawHtml;
@@ -715,19 +788,19 @@ const getSectionHtml = (element: any): string => {
   return mergeRichTextWithContentBlocks(rawHtml, contentBlockEntries);
 };
 
-const getMergedContentStructureHtml = (elements: any): string => {
+const getMergedContentStructureHtml = (elements: any, detailsLookup?: BrandPartnerDetails | null): string => {
   if (!elements) {
     return '';
   }
 
   const prioritized = [
-    getSectionHtml(elements.content_structure),
-    getSectionHtml(elements.content_blocks),
-    getSectionHtml(elements.sections),
-    getSectionHtml(elements.page_sections),
+    getSectionHtml(elements.content_structure, detailsLookup),
+    getSectionHtml(elements.content_blocks, detailsLookup),
+    getSectionHtml(elements.sections, detailsLookup),
+    getSectionHtml(elements.page_sections, detailsLookup),
   ].filter((value) => value.trim().length > 0);
 
-  const fromAnyElement = getContentBlockBodiesFromAnyElement(elements);
+  const fromAnyElement = getContentBlockBodiesFromAnyElement(elements, detailsLookup);
   for (const body of fromAnyElement) {
     if (!prioritized.some((value) => value.trim() === body.trim())) {
       prioritized.push(body);
@@ -1202,17 +1275,16 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
 
     if (response.data.items.length > 0) {
       const item = response.data.items[0];
-      const mergedStructuredContent = getMergedContentStructureHtml(item.elements);
-      const contentSectionHtml = getSectionHtml(item.elements.content_section) || mergedStructuredContent;
-      const formsSectionHtml = getSectionHtml(item.elements.forms_section) || getSectionHtml(item.elements.form_section);
-      const privacyCollectionNoticeHtml = getSectionHtml(item.elements.privacy_collection_notice);
-      
       const collection = item.system?.collection;
       const brandLogo = await getBrandPartnerLogo(collection);
       const brandDisclaimer = await getBrandDisclaimer(collection);
       const brandKey = deriveBrandKey(collection);
       const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
       const detailsLookup = brandHeaderInfo?.details;
+      const mergedStructuredContent = getMergedContentStructureHtml(item.elements, detailsLookup);
+      const contentSectionHtml = getSectionHtml(item.elements.content_section, detailsLookup) || mergedStructuredContent;
+      const formsSectionHtml = getSectionHtml(item.elements.forms_section, detailsLookup) || getSectionHtml(item.elements.form_section, detailsLookup);
+      const privacyCollectionNoticeHtml = getSectionHtml(item.elements.privacy_collection_notice, detailsLookup);
       
       return {
         itemId: item.system?.id,
@@ -1263,10 +1335,10 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
     const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
     const brandKey = deriveBrandKey(collection);
     const detailsLookup = brandHeaderInfo?.details;
-    const mergedStructuredContent = getMergedContentStructureHtml(found.elements);
-    const contentSectionHtml = getSectionHtml(found.elements.content_section) || mergedStructuredContent;
-    const formsSectionHtml = getSectionHtml(found.elements.forms_section) || getSectionHtml(found.elements.form_section);
-    const privacyCollectionNoticeHtml = getSectionHtml(found.elements.privacy_collection_notice);
+    const mergedStructuredContent = getMergedContentStructureHtml(found.elements, detailsLookup);
+    const contentSectionHtml = getSectionHtml(found.elements.content_section, detailsLookup) || mergedStructuredContent;
+    const formsSectionHtml = getSectionHtml(found.elements.forms_section, detailsLookup) || getSectionHtml(found.elements.form_section, detailsLookup);
+    const privacyCollectionNoticeHtml = getSectionHtml(found.elements.privacy_collection_notice, detailsLookup);
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,
@@ -1341,8 +1413,8 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
       const brandKey = deriveBrandKey(collection);
       const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
       const detailsLookup = brandHeaderInfo?.details;
-      const mergedStructuredContent = getMergedContentStructureHtml(item.elements);
-      const contentSectionHtml = getSectionHtml(item.elements.content_section) || mergedStructuredContent;
+      const mergedStructuredContent = getMergedContentStructureHtml(item.elements, detailsLookup);
+      const contentSectionHtml = getSectionHtml(item.elements.content_section, detailsLookup) || mergedStructuredContent;
       return {
         itemId: item.system?.id,
         itemCodename: item.system?.codename,
@@ -1379,8 +1451,8 @@ export async function getFAQPageBySlug(slug: string): Promise<FAQPage | null> {
     const brandHeaderInfo = await getBrandPartnerHeaderInfo(collection);
     const brandKey = deriveBrandKey(collection);
     const detailsLookup = brandHeaderInfo?.details;
-    const mergedStructuredContent = getMergedContentStructureHtml(found.elements);
-    const contentSectionHtml = getSectionHtml(found.elements.content_section) || mergedStructuredContent;
+    const mergedStructuredContent = getMergedContentStructureHtml(found.elements, detailsLookup);
+    const contentSectionHtml = getSectionHtml(found.elements.content_section, detailsLookup) || mergedStructuredContent;
     return {
       itemId: found.system?.id,
       itemCodename: found.system?.codename,

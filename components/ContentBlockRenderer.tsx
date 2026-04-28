@@ -1,5 +1,17 @@
 import React from 'react';
 import type { CSSProperties } from 'react';
+import Accordion from './Accordion';
+
+const ACCORDION_MARKER_PATTERN = /<!--KONTENT_ACCORDION:([\s\S]*?)-->/g;
+
+interface AccordionMarkerPayload {
+  heading: string;
+  contentHtml: string;
+}
+
+type RichTextSegment =
+  | { kind: 'html'; html: string }
+  | { kind: 'accordion'; payload: AccordionMarkerPayload };
 
 interface ContentBlockRendererProps {
   /**
@@ -89,6 +101,64 @@ export default function ContentBlockRenderer({
     return normalized.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().length > 0;
   };
 
+  const decodeAccordionMarkerPayload = (encodedPayload: string): AccordionMarkerPayload | null => {
+    try {
+      const decoded = decodeURIComponent(encodedPayload);
+      const parsed = JSON.parse(decoded) as { heading?: unknown; contentHtml?: unknown };
+
+      const heading = typeof parsed.heading === 'string' ? parsed.heading.trim() : '';
+      const contentHtml = typeof parsed.contentHtml === 'string' ? parsed.contentHtml : '';
+
+      if (!heading && !contentHtml) {
+        return null;
+      }
+
+      return {
+        heading,
+        contentHtml,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  const parseRichTextSegments = (value: string): RichTextSegment[] => {
+    const segments: RichTextSegment[] = [];
+    ACCORDION_MARKER_PATTERN.lastIndex = 0;
+    let cursor = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = ACCORDION_MARKER_PATTERN.exec(value)) !== null) {
+      const markerIndex = match.index;
+      const markerText = match[0];
+      const encodedPayload = match[1] || '';
+
+      if (markerIndex > cursor) {
+        segments.push({ kind: 'html', html: value.slice(cursor, markerIndex) });
+      }
+
+      const payload = decodeAccordionMarkerPayload(encodedPayload);
+      if (payload) {
+        segments.push({ kind: 'accordion', payload });
+      } else {
+        // Fallback: keep marker text so bad payloads do not crash rendering.
+        segments.push({ kind: 'html', html: markerText });
+      }
+
+      cursor = markerIndex + markerText.length;
+    }
+
+    if (cursor < value.length) {
+      segments.push({ kind: 'html', html: value.slice(cursor) });
+    }
+
+    if (segments.length === 0) {
+      return [{ kind: 'html', html: value }];
+    }
+
+    return segments;
+  };
+
   // Build data attributes for Kontent.ai edit mode integration
   const dataAttributes = itemId && elementCodename
     ? {
@@ -101,12 +171,40 @@ export default function ContentBlockRenderer({
     return null;
   }
 
+  const segments = parseRichTextSegments(html);
+  const hasAccordionSegment = segments.some((segment) => segment.kind === 'accordion');
+
+  if (!hasAccordionSegment) {
+    return (
+      <Tag
+        className={className}
+        style={style}
+        {...dataAttributes}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    );
+  }
+
   return (
-    <Tag
-      className={className}
-      style={style}
-      {...dataAttributes}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <Tag className={className} style={style} {...dataAttributes}>
+      {segments.map((segment, index) => {
+        if (segment.kind === 'accordion') {
+          return (
+            <Accordion
+              key={`accordion-${index}`}
+              title={segment.payload.heading}
+              contentHtml={segment.payload.contentHtml}
+              className="my-4"
+            />
+          );
+        }
+
+        if (!hasMeaningfulHtml(segment.html)) {
+          return null;
+        }
+
+        return <div key={`html-${index}`} dangerouslySetInnerHTML={{ __html: segment.html }} />;
+      })}
+    </Tag>
   );
 }
