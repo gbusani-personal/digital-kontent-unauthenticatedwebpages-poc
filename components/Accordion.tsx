@@ -47,12 +47,19 @@ export default function Accordion({ title, contentHtml, className }: AccordionPr
     <details className={`group rounded-lg border border-slate-200 bg-white ${className || ''}`.trim()}>
       <summary className="list-none cursor-pointer px-4 py-3 font-semibold text-slate-900 leading-relaxed flex items-center justify-between gap-3">
         <span>{safeTitle}</span>
-        <span
+        <svg
           aria-hidden="true"
-          className="inline-block text-slate-600 transition-transform duration-200 group-open:rotate-180"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className="size-5 shrink-0 text-slate-500 transition-transform duration-200 group-open:rotate-180"
         >
-          ▼
-        </span>
+          <path
+            fillRule="evenodd"
+            d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+            clipRule="evenodd"
+          />
+        </svg>
       </summary>
       <div className="px-4 pb-4 rich-text-content" dangerouslySetInnerHTML={{ __html: safeContentHtml }} />
     </details>
