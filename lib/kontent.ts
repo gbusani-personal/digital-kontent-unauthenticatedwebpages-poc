@@ -520,15 +520,35 @@ const normalizeRichTextHtml = (value: unknown): string => {
   return hasMeaningfulRichText(value) ? value : '';
 };
 
+const CONTENT_BLOCK_RICH_TEXT_KEYS = ['body', 'content', 'rich_text_content', 'rich_text', 'main_content', 'text'];
+
+const getPrimaryContentBlockRichTextElement = (linked: any): any | undefined => {
+  const elements = linked?.elements;
+  if (!elements || typeof elements !== 'object') {
+    return undefined;
+  }
+
+  for (const key of CONTENT_BLOCK_RICH_TEXT_KEYS) {
+    if (!elements[key]) {
+      continue;
+    }
+
+    const value = elements[key]?.value;
+    if (normalizeRichTextHtml(value)) {
+      return elements[key];
+    }
+  }
+
+  return undefined;
+};
+
 const getContentBlockRichText = (linked: any): string | undefined => {
   const elements = linked?.elements;
   if (!elements || typeof elements !== 'object') {
     return undefined;
   }
 
-  const preferredKeys = ['body', 'content', 'rich_text_content', 'rich_text', 'main_content', 'text'];
-
-  for (const key of preferredKeys) {
+  for (const key of CONTENT_BLOCK_RICH_TEXT_KEYS) {
     const value = elements[key]?.value;
     const normalizedValue = normalizeRichTextHtml(value);
     if (normalizedValue) {
@@ -555,6 +575,29 @@ const getContentBlockRichText = (linked: any): string | undefined => {
   }
 
   return undefined;
+};
+
+const MAX_CONTENT_BLOCK_NESTING_DEPTH = 8;
+
+const getNestedContentBlockHtml = (
+  linked: any,
+  detailsLookup?: BrandPartnerDetails | null,
+  depth = 0
+): string => {
+  const primaryRichTextElement = getPrimaryContentBlockRichTextElement(linked);
+  if (primaryRichTextElement) {
+    const resolvedPrimaryHtml = getSectionHtml(primaryRichTextElement, detailsLookup, depth + 1);
+    if (resolvedPrimaryHtml.trim().length > 0) {
+      return resolvedPrimaryHtml;
+    }
+  }
+
+  const mergedNestedHtml = getMergedContentStructureHtml(linked?.elements, detailsLookup, depth + 1);
+  if (mergedNestedHtml.trim().length > 0) {
+    return mergedNestedHtml;
+  }
+
+  return getContentBlockRichText(linked) || '';
 };
 
 interface ContentBlockEntry {
@@ -607,8 +650,16 @@ const toAccordionMarker = (id: string | undefined, codename: string | undefined,
   return `<!--${ACCORDION_MARKER_PREFIX}${payload}-->`;
 };
 
-const getContentBlockEntries = (element: any, detailsLookup?: BrandPartnerDetails | null): ContentBlockEntry[] => {
+const getContentBlockEntries = (
+  element: any,
+  detailsLookup?: BrandPartnerDetails | null,
+  depth = 0
+): ContentBlockEntry[] => {
   if (!element) {
+    return [];
+  }
+
+  if (depth > MAX_CONTENT_BLOCK_NESTING_DEPTH) {
     return [];
   }
 
@@ -620,7 +671,7 @@ const getContentBlockEntries = (element: any, detailsLookup?: BrandPartnerDetail
   const toEntry = (linked: any): ContentBlockEntry | undefined => {
     if (isAccordionContentBlockLinkedItem(linked)) {
       const heading = getAccordionHeading(linked);
-      const contentHtml = getContentBlockRichText(linked);
+      const contentHtml = getNestedContentBlockHtml(linked, detailsLookup, depth);
       const resolvedHeading = replaceContentPlaceholders(heading, detailsLookup);
       const resolvedContentHtml = replaceContentPlaceholders(contentHtml, detailsLookup, { linkify: true });
 
@@ -648,7 +699,7 @@ const getContentBlockEntries = (element: any, detailsLookup?: BrandPartnerDetail
       return undefined;
     }
 
-    const html = getContentBlockRichText(linked);
+    const html = getNestedContentBlockHtml(linked, detailsLookup, depth);
     if (!html || html.trim().length === 0) {
       return undefined;
     }
@@ -695,8 +746,8 @@ const getContentBlockEntries = (element: any, detailsLookup?: BrandPartnerDetail
     .filter((entry: ContentBlockEntry | undefined): entry is ContentBlockEntry => Boolean(entry));
 };
 
-const getContentBlockBodies = (element: any, detailsLookup?: BrandPartnerDetails | null): string[] => {
-  return getContentBlockEntries(element, detailsLookup).map((entry) => entry.html);
+const getContentBlockBodies = (element: any, detailsLookup?: BrandPartnerDetails | null, depth = 0): string[] => {
+  return getContentBlockEntries(element, detailsLookup, depth).map((entry) => entry.html);
 };
 
 const mergeRichTextWithContentBlocks = (rawHtml: string, entries: ContentBlockEntry[]): string => {
@@ -749,7 +800,11 @@ const mergeRichTextWithContentBlocks = (rawHtml: string, entries: ContentBlockEn
   return [replacedHtml, ...missingBodies].filter((part) => part.trim().length > 0).join('');
 };
 
-const getContentBlockBodiesFromAnyElement = (elements: Record<string, any>, detailsLookup?: BrandPartnerDetails | null): string[] => {
+const getContentBlockBodiesFromAnyElement = (
+  elements: Record<string, any>,
+  detailsLookup?: BrandPartnerDetails | null,
+  depth = 0
+): string[] => {
   if (!elements || typeof elements !== 'object') {
     return [];
   }
@@ -758,7 +813,7 @@ const getContentBlockBodiesFromAnyElement = (elements: Record<string, any>, deta
   const results: string[] = [];
 
   for (const element of Object.values(elements)) {
-    const bodies = getContentBlockBodies(element, detailsLookup);
+    const bodies = getContentBlockBodies(element, detailsLookup, depth);
     for (const body of bodies) {
       const normalized = body.trim();
       if (!normalized || seen.has(normalized)) {
@@ -773,13 +828,13 @@ const getContentBlockBodiesFromAnyElement = (elements: Record<string, any>, deta
   return results;
 };
 
-const getSectionHtml = (element: any, detailsLookup?: BrandPartnerDetails | null): string => {
+const getSectionHtml = (element: any, detailsLookup?: BrandPartnerDetails | null, depth = 0): string => {
   if (!element) {
     return '';
   }
 
   const rawHtml = normalizeRichTextHtml(element.value);
-  const contentBlockEntries = getContentBlockEntries(element, detailsLookup);
+  const contentBlockEntries = getContentBlockEntries(element, detailsLookup, depth);
 
   if (contentBlockEntries.length === 0) {
     return rawHtml;
@@ -788,19 +843,23 @@ const getSectionHtml = (element: any, detailsLookup?: BrandPartnerDetails | null
   return mergeRichTextWithContentBlocks(rawHtml, contentBlockEntries);
 };
 
-const getMergedContentStructureHtml = (elements: any, detailsLookup?: BrandPartnerDetails | null): string => {
+const getMergedContentStructureHtml = (
+  elements: any,
+  detailsLookup?: BrandPartnerDetails | null,
+  depth = 0
+): string => {
   if (!elements) {
     return '';
   }
 
   const prioritized = [
-    getSectionHtml(elements.content_structure, detailsLookup),
-    getSectionHtml(elements.content_blocks, detailsLookup),
-    getSectionHtml(elements.sections, detailsLookup),
-    getSectionHtml(elements.page_sections, detailsLookup),
+    getSectionHtml(elements.content_structure, detailsLookup, depth),
+    getSectionHtml(elements.content_blocks, detailsLookup, depth),
+    getSectionHtml(elements.sections, detailsLookup, depth),
+    getSectionHtml(elements.page_sections, detailsLookup, depth),
   ].filter((value) => value.trim().length > 0);
 
-  const fromAnyElement = getContentBlockBodiesFromAnyElement(elements, detailsLookup);
+  const fromAnyElement = getContentBlockBodiesFromAnyElement(elements, detailsLookup, depth);
   for (const body of fromAnyElement) {
     if (!prioritized.some((value) => value.trim() === body.trim())) {
       prioritized.push(body);
