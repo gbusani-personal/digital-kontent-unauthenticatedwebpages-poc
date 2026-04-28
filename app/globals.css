@@ -82,14 +82,35 @@
   @apply border-l-4 border-blue-500 pl-4 italic text-slate-600 my-4;
 }
 
-.rich-text-content a {
-  @apply underline;
-  color: var(--content-heading-color, #0f172a);
+.rich-text-content a,
+.rich-text-content a:hover,
+.rich-text-content a:visited,
+.brand-themed-link,
+.brand-themed-link:hover,
+.brand-themed-link:visited {
+  color: var(--content-heading-color, #0f172a) !important;
+  text-decoration: underline;
 }
 
-.rich-text-content a:hover,
-.rich-text-content a:visited {
-  color: var(--content-heading-color, #0f172a);
+.rich-text-content a *,
+.rich-text-content a strong,
+.rich-text-content a b,
+.rich-text-content a em,
+.rich-text-content a i,
+.brand-themed-link *,
+.brand-themed-link strong,
+.brand-themed-link b,
+.brand-themed-link em,
+.brand-themed-link i,
+.brand-themed-link [style*='font-weight: bold'],
+.brand-themed-link [style*='font-weight:bold'],
+.brand-themed-link [style*='font-weight: 700'],
+.brand-themed-link [style*='font-weight:700'],
+.brand-themed-link [style*='font-style: italic'],
+.brand-themed-link [style*='font-style:italic'],
+.rich-text-content a [style*='font-style: italic'],
+.rich-text-content a [style*='font-style:italic'] {
+  color: inherit !important;
 }
 
 .rich-text-content strong,

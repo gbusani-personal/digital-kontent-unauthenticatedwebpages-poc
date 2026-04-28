@@ -83,6 +83,8 @@ const BARE_DOMAIN_PATTERN = /^[a-z0-9.-]+\.[a-z]{2,}(?:\/[^\s]*)?$/i;
 const ANCHOR_TAG_PATTERN = /<a\b([^>]*)>/gi;
 const ATTRIBUTE_TARGET_PATTERN = /target\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/i;
 const ATTRIBUTE_REL_PATTERN = /rel\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/i;
+const ATTRIBUTE_CLASS_PATTERN = /class\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/i;
+const BRAND_THEMED_LINK_CLASS = 'brand-themed-link';
 
 type BrandPartnerDetails = Record<string, unknown>;
 
@@ -119,6 +121,17 @@ const ensureAnchorAttributes = (attributes: string): string => {
     });
   } else {
     updated = `${updated} rel="noopener noreferrer"`.trim();
+  }
+
+  if (ATTRIBUTE_CLASS_PATTERN.test(updated)) {
+    updated = updated.replace(ATTRIBUTE_CLASS_PATTERN, (_match, value: string) => {
+      const unquoted = value.replace(/^['"]|['"]$/g, '');
+      const tokens = new Set(unquoted.split(/\s+/).filter(Boolean));
+      tokens.add(BRAND_THEMED_LINK_CLASS);
+      return `class="${Array.from(tokens).join(' ')}"`;
+    });
+  } else {
+    updated = `${updated} class="${BRAND_THEMED_LINK_CLASS}"`.trim();
   }
 
   return updated;
@@ -257,7 +270,7 @@ export const replaceContentPlaceholders = (
   }
 
   if (!brandPartnerDetails || typeof brandPartnerDetails !== 'object') {
-    return content;
+    return options.linkify ? forceHyperlinksToOpenInNewWindow(content) : content;
   }
 
   const normalizedDetailsLookup = new Map<string, unknown>();
