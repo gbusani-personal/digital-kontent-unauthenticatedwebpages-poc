@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+﻿import { notFound } from 'next/navigation';
 import type { CSSProperties } from 'react';
 import { getLandingPageBySlug } from '../../../lib/kontent';
 import { landingPageStyles, getBrandStyles, ds } from '../../../lib/design-system';
@@ -10,8 +10,7 @@ import BannerImage from '../../../components/BannerImage';
 
 interface LandingPageProps {
   params: Promise<{
-    category: string;
-    page: string;
+    slug: string;
   }>;
 }
 
@@ -46,14 +45,8 @@ const normalizeWebsiteUrl = (url: string): string => {
 };
 
 export default async function LandingPage({ params }: LandingPageProps) {
-  const { category, page: pageParam } = await params;
-  // Reconstruct the Kontent.ai URL Slug: /bupa/making-a-claim → bupa-making-a-claim
-  const slug = `${category}-${pageParam}`;
-
-  // Primary lookup uses the hyphenated form (e.g. bupa-making-a-claim).
-  // Fall back to the slash form (e.g. pia/making-a-claim) for items whose
-  // URL Slug was entered with a literal "/" instead of a "-" in Kontent.ai.
-  const page = (await getLandingPageBySlug(slug)) ?? (await getLandingPageBySlug(`${category}/${pageParam}`));
+  const { slug } = await params;
+  const page = await getLandingPageBySlug(slug);
   const mrecTiles = page?.mrecTiles ?? [];
   const faqs = page?.faqs ?? [];
   const hasSidebarContent = mrecTiles.length > 0 || faqs.length > 0;
@@ -100,8 +93,8 @@ export default async function LandingPage({ params }: LandingPageProps) {
           {/* Main Content */}
           <div className={hasSidebarContent ? 'lg:col-span-3' : ''}>
             <div
-              className="flex flex-col p-4 sm:p-6 lg:p-10 rounded-lg sm:rounded-xl lg:rounded-3xl space-y-4 sm:space-y-6"
-              style={{ ...landingPageStyles.card, ...brandStyles.card }}
+              className="flex flex-col p-4 sm:p-6 lg:p-10 rounded-lg sm:rounded-xl lg:rounded-3xl"
+              style={{ ...landingPageStyles.card, ...brandStyles.card, gap: ds.spacing.lg }}
               data-kontent-item-id={pageItemId}
             >
               {page.bannerUrl && (
@@ -114,6 +107,7 @@ export default async function LandingPage({ params }: LandingPageProps) {
                   />
                 </div>
               )}
+
               <div className="text-center">
                 <KontentEditable
                   itemId={pageItemId}
@@ -178,9 +172,9 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
           {/* MREC Tiles and FAQ Sidebar */}
           {hasSidebarContent && (
-            <div className="lg:col-span-1" style={{ display: 'grid', gridAutoRows: 'max-content', gap: ds.spacing.lg }}>
+            <div className="grid grid-cols-1 auto-rows-max gap-4 sm:gap-6">
               {mrecTiles.length > 0 && (
-                <div style={{ display: 'grid', gridAutoRows: 'max-content', gap: ds.spacing.md }}>
+                <div className="space-y-4">
                   {mrecTiles.map((tile, index) => (
                     <div
                       key={index}
@@ -201,8 +195,10 @@ export default async function LandingPage({ params }: LandingPageProps) {
               )}
 
               {faqs.length > 0 && (
-                <div style={{ ...landingPageStyles.faqCard, ...brandStyles.faqCard }}>
-                  <h2 style={{ ...landingPageStyles.sectionTitle, ...brandStyles.sectionTitle }} className="mb-4">Frequently Asked Questions</h2>
+                <div style={landingPageStyles.faqCard}>
+                  <h2 style={{ ...landingPageStyles.sectionTitle, ...brandStyles.sectionTitle }} className="mb-4">
+                    Frequently Asked Questions
+                  </h2>
                   <div className="space-y-3">
                     {faqs.map((faq, index) => (
                       <details
@@ -230,19 +226,14 @@ export default async function LandingPage({ params }: LandingPageProps) {
                             ▼
                           </span>
                         </summary>
-                        <div
+                        <KontentEditable
+                          itemId={faq.itemId}
+                          elementCodename="answer"
+                          tag="div"
                           className="mt-3 rich-text-content"
                           style={{ ...landingPageStyles.faqAnswer, ...brandStyles.bodyText }}
-                        >
-                          <KontentEditable
-                            itemId={faq.itemId}
-                            elementCodename="answer"
-                            tag="div"
-                            className="rich-text-content"
-                            style={{ ...landingPageStyles.faqAnswer, ...brandStyles.bodyText }}
-                            html={faq.answer}
-                          />
-                        </div>
+                          html={faq.answer}
+                        />
                       </details>
                     ))}
                   </div>
