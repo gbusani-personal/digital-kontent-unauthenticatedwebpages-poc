@@ -1,4 +1,4 @@
-﻿import { notFound } from 'next/navigation';
+﻿import { notFound, permanentRedirect } from 'next/navigation';
 import type { CSSProperties } from 'react';
 import { getLandingPageBySlug } from '../../../lib/kontent';
 import { landingPageStyles, getBrandStyles, ds } from '../../../lib/design-system';
@@ -46,6 +46,17 @@ const normalizeWebsiteUrl = (url: string): string => {
 
 export default async function LandingPage({ params }: LandingPageProps) {
   const { slug } = await params;
+
+  // Redirect flat slugs (e.g. "bupa-useful-documents") to the nested
+  // /:category/:page structure (e.g. "/landing/bupa/useful-documents").
+  // The split occurs at the first hyphen so "bupa" becomes the category and
+  // everything after (e.g. "useful-documents") becomes the page segment.
+  const firstHyphen = slug.indexOf('-');
+  if (firstHyphen !== -1) {
+    const category = slug.slice(0, firstHyphen);
+    const page = slug.slice(firstHyphen + 1);
+    permanentRedirect(`/landing/${category}/${page}`);
+  }
   const page = await getLandingPageBySlug(slug);
   const mrecTiles = page?.mrecTiles ?? [];
   const faqs = page?.faqs ?? [];
