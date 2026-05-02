@@ -1,4 +1,4 @@
-﻿import { notFound } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import type { CSSProperties } from 'react';
 import { getLandingPageBySlug } from '../../../lib/kontent';
 import { landingPageStyles, getBrandStyles, ds } from '../../../lib/design-system';
@@ -10,7 +10,8 @@ import BannerImage from '../../../components/BannerImage';
 
 interface LandingPageProps {
   params: Promise<{
-    slug: string;
+    category: string;
+    page: string;
   }>;
 }
 
@@ -45,7 +46,11 @@ const normalizeWebsiteUrl = (url: string): string => {
 };
 
 export default async function LandingPage({ params }: LandingPageProps) {
-  const { slug } = await params;
+  const { category, page: pageSlug } = await params;
+  // Combine category and page segments with a hyphen to reconstruct the
+  // original Kontent.ai 'URL Slug' field value (e.g. "bupa" + "useful-documents" → "bupa-useful-documents").
+  const slug = `${category}-${pageSlug}`;
+
   const page = await getLandingPageBySlug(slug);
   const mrecTiles = page?.mrecTiles ?? [];
   const faqs = page?.faqs ?? [];
